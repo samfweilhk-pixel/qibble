@@ -109,7 +109,7 @@ export default function RegimesPage() {
                 )
               })}
               <Legend wrapperStyle={{ fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                 formatter={(v: number) => [`${v.toFixed(2)}%`]}
                 labelFormatter={l => `Day ${l}`}
               />
@@ -132,7 +132,7 @@ export default function RegimesPage() {
               <Area yAxisId="vol" dataKey="roll_vol_30d" fill="#7c3aed" fillOpacity={0.15} stroke="#7c3aed" strokeWidth={1} isAnimationActive={false} name="30d Avg Vol" />
               <Line yAxisId="px" dataKey="close_px" stroke="#00d4ff" dot={false} strokeWidth={1.5} isAnimationActive={false} name="Price" />
               <Legend wrapperStyle={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                 formatter={(v: number, name: string) => {
                   if (name === 'Price') return [`$${v.toLocaleString()}`, name]
                   return [`${v.toFixed(0)} BTC`, name]

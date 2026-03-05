@@ -22,7 +22,7 @@ export default function CumulativeFlowChart({ bars }: { bars: Bar[] }) {
           <Line yAxisId="ret" dataKey="cum_return" stroke="#ffd700" dot={false} strokeWidth={2} name="Return %" isAnimationActive={false} />
           <Legend wrapperStyle={{ fontSize: 10 }} />
           <Tooltip
-            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }}
+            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }}
             labelStyle={{ color: '#00d4ff' }}
             formatter={(val: number, name: string) => {
               if (name === 'Return %') return [`${val.toFixed(3)}%`, name]

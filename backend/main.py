@@ -395,9 +395,25 @@ def _build_corr_divergence() -> dict:
 
 # --- Time-of-Day Profiles ---
 def _build_flow_tod() -> dict:
-    """Hourly flow profiles (24 buckets)."""
+    """Hourly flow profiles (24 buckets), demeaned for net_flow and bar_imbalance.
+
+    Binance taker_buy_volume averages ~48.7% of total volume (not 50%), creating
+    a persistent negative bias in raw net_flow and bar_imbalance. To show meaningful
+    regime differences, we subtract the overall hourly average (across ALL regimes)
+    from each regime's hourly value. This way:
+      - BULL shows positive if buying is stronger than average
+      - BEAR shows negative if selling is stronger than average
+      - CHOP stays near zero
+    Volume and avg_trade_size are NOT demeaned (absolute values are meaningful).
+    """
     results = {}
     df["hour"] = df["open_time"].dt.hour
+
+    # Compute overall (all-regime) hourly baseline
+    baseline = df.groupby("hour").agg(
+        baseline_net_flow=("net_flow", "mean"),
+        baseline_bar_imb=("bar_imbalance", "mean"),
+    ).reset_index()
 
     for regime in ["BULL", "BEAR", "CHOP"]:
         rdf = df[df["regime"] == regime]
@@ -408,6 +424,13 @@ def _build_flow_tod() -> dict:
             avg_trade_size=("avg_trade_size", "mean"),
             n_bars=("close", "count"),
         ).reset_index()
+
+        # Demean: subtract overall hourly average
+        hourly = hourly.merge(baseline, on="hour", how="left")
+        hourly["avg_net_flow"] = hourly["avg_net_flow"] - hourly["baseline_net_flow"]
+        hourly["avg_bar_imb"] = hourly["avg_bar_imb"] - hourly["baseline_bar_imb"]
+        hourly.drop(columns=["baseline_net_flow", "baseline_bar_imb"], inplace=True)
+
         results[regime] = hourly.to_dict("records")
 
     return results

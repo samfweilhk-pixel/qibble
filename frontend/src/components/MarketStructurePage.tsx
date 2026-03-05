@@ -67,7 +67,7 @@ export default function MarketStructurePage() {
       {/* Time-of-Day Profile */}
       <ChartCard
         title="Time-of-Day Profile"
-        description="Average trading patterns by hour of day across all days in this regime. Shows when buyers vs sellers tend to dominate, and when volume is heaviest."
+        description="Average trading patterns by hour of day, relative to the overall average across all regimes. For Net Flow and Imbalance: positive = more buying pressure than normal, negative = more selling than normal. Volume and Trade Size show absolute values."
         height="h-[220px] md:h-[300px]"
       >
         <div className="flex gap-2 mb-2">
