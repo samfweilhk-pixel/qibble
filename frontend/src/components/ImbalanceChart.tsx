@@ -23,7 +23,7 @@ export default function ImbalanceChart({ bars }: { bars: BarType[] }) {
             ))}
           </Bar>
           <Tooltip
-            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }}
+            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }}
             labelStyle={{ color: '#00d4ff' }}
             formatter={(val: number) => [`${(val * 100).toFixed(1)}%`, 'Imbalance']}
           />

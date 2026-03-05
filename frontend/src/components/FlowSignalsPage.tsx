@@ -42,7 +42,7 @@ export default function FlowSignalsPage() {
       {/* Divergence */}
       <ChartCard
         title="Flow-Price Divergence"
-        description="Detects when buying/selling pressure disconnects from price. Green = buyers active but price flat or down (expect bounce). Red = sellers active but price flat or up (expect drop). Shows average price move over next 1-10 minutes after each event."
+        description="Detects when buying/selling pressure disconnects from price. Green = buyers active but price flat or down (expect bounce). Red = sellers active but price flat or up (expect drop). Shows average price move over next 1-10 minutes after each event. Values are in basis points (bps) — 1 bps = 0.01% price change, so 5 bps = 0.05%."
         height="h-[280px] md:h-[360px]"
       >
         <div className="flex gap-2 mb-2">
@@ -68,7 +68,7 @@ export default function FlowSignalsPage() {
             {divData?.bearish?.curve && (
               <Line data={divData.bearish.curve} dataKey="avg_bps" stroke="#ff3366" strokeWidth={2} dot={{ r: 3, fill: '#ff3366' }} isAnimationActive={false} />
             )}
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
               formatter={(v: number) => [`${v.toFixed(2)} bps`]}
               labelFormatter={l => `${l} min ahead`}
             />
@@ -94,7 +94,7 @@ export default function FlowSignalsPage() {
                 <Cell key={i} fill={d.lag >= 0 ? '#00d4ff' : '#7c3aed'} opacity={0.8} />
               ))}
             </Bar>
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
               formatter={(v: number) => [`${v.toFixed(4)}`, 'Correlation']}
               labelFormatter={(l) => `Lag: ${l} min`}
             />
@@ -106,7 +106,7 @@ export default function FlowSignalsPage() {
         {/* Flow Extremes */}
         <ChartCard
           title="Extreme Flow Events"
-          description="What happens to price after unusually large buying or selling? The curve shows average price change 1-10 minutes after flow spikes to 2x normal."
+          description="What happens to price after unusually large buying or selling? The curve shows average price change 1-10 minutes after flow spikes to 2x normal. Values are in basis points (bps) — 1 bps = 0.01% price change."
           height="h-[260px] md:h-[320px]"
         >
           <div className="flex gap-4 mb-2 text-[10px]">
@@ -125,7 +125,7 @@ export default function FlowSignalsPage() {
               {extData?.fwd_curve_sell && (
                 <Line data={extData.fwd_curve_sell} dataKey="avg_bps" stroke="#ff3366" strokeWidth={2} dot={{ r: 3, fill: '#ff3366' }} isAnimationActive={false} />
               )}
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                 formatter={(v: number) => [`${v.toFixed(2)} bps`]}
                 labelFormatter={l => `${l} min ahead`}
               />
@@ -136,7 +136,7 @@ export default function FlowSignalsPage() {
         {/* Flow Persistence */}
         <ChartCard
           title="Flow Persistence (Autocorrelation)"
-          description="Measures how long a burst of buying or selling sustains itself. A high bar at lag 1 means this minute's pressure strongly predicts next minute's pressure. Bars fading toward zero means the burst is dying out and each minute becomes independent."
+          description="Measures how long a burst of buying or selling sustains itself. The Y-axis shows how connected each minute is to earlier minutes — 0.10 means 10% of the previous pressure carries over, 0.01 means almost none. A tall bar at lag 1 that fades quickly = short bursts. Bars staying elevated out to lag 10+ = sustained momentum that lasts 10+ minutes."
           height="h-[260px] md:h-[320px]"
         >
           <ResponsiveContainer>
@@ -146,7 +146,7 @@ export default function FlowSignalsPage() {
               <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Autocorrelation', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               <Bar dataKey="acf" fill="#7c3aed" opacity={0.8} isAnimationActive={false} />
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                 formatter={(v: number) => [`${v.toFixed(4)}`, 'Autocorrelation']}
                 labelFormatter={(l) => `Lag: ${l} min`}
               />

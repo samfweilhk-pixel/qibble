@@ -28,7 +28,7 @@ export default function PriceVolumeChart({ bars }: { bars: BarType[] }) {
           <Bar yAxisId="vol" dataKey="volume" fill="#00d4ff" opacity={0.2} isAnimationActive={false} />
           <Line yAxisId="px" dataKey="close" stroke="#00d4ff" dot={false} strokeWidth={1.5} isAnimationActive={false} />
           <Tooltip
-            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }}
+            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }}
             labelStyle={{ color: '#00d4ff' }}
             formatter={(val: number, name: string) => {
               if (name === 'close') return [`$${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 'Price']

@@ -19,7 +19,7 @@ export default function BuySellVolumeChart({ bars }: { bars: BarType[] }) {
           <Bar dataKey="buy_vol" stackId="vol" fill="#00ff88" opacity={0.8} name="Buy Vol" isAnimationActive={false} />
           <Bar dataKey="sell_vol" stackId="vol" fill="#ff3366" opacity={0.8} name="Sell Vol" isAnimationActive={false} />
           <Tooltip
-            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }}
+            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }}
             labelStyle={{ color: '#00d4ff' }}
             formatter={(val: number, name: string) => [`${val.toFixed(3)} BTC`, name]}
           />

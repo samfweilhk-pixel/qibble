@@ -94,7 +94,7 @@ export default function MarketStructurePage() {
                 } opacity={0.8} />
               ))}
             </Bar>
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
               labelFormatter={h => `${String(h).padStart(2, '0')}:00 UTC`}
               formatter={(v: number) => {
                 if (todMetric === 'avg_bar_imb') return [`${(v * 100).toFixed(2)}%`, 'Imbalance']
@@ -125,7 +125,7 @@ export default function MarketStructurePage() {
                   <Cell key={i} fill={SESSION_COLORS[d.session]} opacity={0.8} />
                 ))}
               </Bar>
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                 formatter={(v: number) => [`${v.toFixed(3)}%`, 'Avg Return']}
               />
             </BarChart>
@@ -148,7 +148,7 @@ export default function MarketStructurePage() {
                   <Cell key={i} fill={d.fill} opacity={0.8} />
                 ))}
               </Bar>
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                 formatter={(v: number) => [`${v.toFixed(1)}%`, '% of Days']}
               />
             </BarChart>
@@ -180,7 +180,7 @@ export default function MarketStructurePage() {
                       <XAxis dataKey="flow" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Flow" label={{ value: `${fromSession} Net Flow (BTC)`, position: 'bottom', fill: '#555', fontSize: 8, dy: 10 }} />
                       <YAxis dataKey="return" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Return %" label={{ value: `${toSession} Return %`, angle: -90, position: 'insideLeft', fill: '#555', fontSize: 8, dx: -5 }} />
                       <Scatter data={data.points} fill="#00d4ff" opacity={0.4} isAnimationActive={false} />
-                      <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+                      <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                         formatter={(v: number, name: string) => {
                           if (name === 'Flow') return [`${v.toFixed(1)} BTC`, 'Net Flow']
                           return [`${v.toFixed(3)}%`, 'Return']
@@ -215,7 +215,7 @@ export default function MarketStructurePage() {
               ))}
             </Bar>
             <Line yAxisId="px" dataKey="close" stroke="#00d4ff" dot={false} strokeWidth={1} opacity={0.5} isAnimationActive={false} />
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
               formatter={(v: number, name: string) => {
                 if (name === 'close') return [`$${v.toLocaleString()}`, 'Price']
                 return [`${v.toFixed(2)}σ`, 'Whale Z']

@@ -25,7 +25,7 @@ export default function RollingImbalanceChart({ bars }: { bars: Bar[] }) {
           <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
           <Area dataKey="rolling_imb_20" stroke="#7c3aed" strokeWidth={2} fill="url(#imbGrad)" isAnimationActive={false} />
           <Tooltip
-            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }}
+            contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }}
             labelStyle={{ color: '#00d4ff' }}
             formatter={(val: number) => [`${(val * 100).toFixed(1)}%`, 'Rolling Imb']}
           />
