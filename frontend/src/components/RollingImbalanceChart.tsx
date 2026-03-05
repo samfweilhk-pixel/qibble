@@ -11,8 +11,8 @@ export default function RollingImbalanceChart({ bars }: { bars: Bar[] }) {
       description="Smoothed buyer/seller balance over the last 20 minutes. Shows the trend direction of trading pressure."
       height="h-[150px] md:h-[200px]"
     >
-      <ResponsiveContainer>
-        <AreaChart data={bars}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <defs>
             <linearGradient id="imbGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
@@ -21,7 +21,7 @@ export default function RollingImbalanceChart({ bars }: { bars: Bar[] }) {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
           <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
-          <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
+          <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Imbalance', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
           <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
           <Area dataKey="rolling_imb_20" stroke="#7c3aed" strokeWidth={2} fill="url(#imbGrad)" isAnimationActive={false} />
           <Tooltip

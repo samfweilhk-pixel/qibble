@@ -20,8 +20,8 @@ export default function PriceVolumeChart({ bars }: { bars: BarType[] }) {
         <ComposedChart data={bars}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
           <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
-          <YAxis yAxisId="vol" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(0)}`} />
-          <YAxis yAxisId="px" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} domain={['auto', 'auto']} tickFormatter={v => `$${v.toLocaleString()}`} />
+          <YAxis yAxisId="vol" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(0)}`} label={{ value: 'Volume (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
+          <YAxis yAxisId="px" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} domain={['auto', 'auto']} tickFormatter={v => `$${v.toLocaleString()}`} label={{ value: 'Price (USD)', angle: 90, position: 'insideRight', fill: '#555', fontSize: 9, dx: 5 }} />
           {SESSION_LINES.map(s => (
             <ReferenceLine key={s.time} x={s.time} yAxisId="vol" stroke="#2a2a3e" strokeDasharray="4 4" label={{ value: s.label, position: 'top', fill: '#555', fontSize: 9 }} />
           ))}

@@ -11,11 +11,11 @@ export default function ImbalanceChart({ bars }: { bars: BarType[] }) {
       description="Balance between buyers and sellers per minute. +1 = all buyers. -1 = all sellers. Near 0 = balanced."
       height="h-[180px] md:h-[240px]"
     >
-      <ResponsiveContainer>
-        <BarChart data={bars}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
           <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
-          <YAxis domain={[-1, 1]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
+          <YAxis domain={[-1, 1]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Imbalance', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
           <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
           <Bar dataKey="bar_imb" isAnimationActive={false}>
             {bars.map((b, i) => (

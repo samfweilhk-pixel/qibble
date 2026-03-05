@@ -64,8 +64,11 @@ export default function FlowSignalsPage() {
             {divData?.bearish?.curve && (
               <Line data={divData.bearish.curve} dataKey="avg_bps" stroke="#ff3366" strokeWidth={2} dot={{ r: 3, fill: '#ff3366' }} name={`Bearish (${divData.bearish.n})`} isAnimationActive={false} />
             )}
-            <Legend wrapperStyle={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }} formatter={(v: number) => [`${v.toFixed(1)} bps`]} />
+            <Legend wrapperStyle={{ fontSize: 10 }} verticalAlign="bottom" />
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
+              formatter={(v: number) => [`${v.toFixed(2)} bps`]}
+              labelFormatter={l => `${l} min ahead`}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -77,10 +80,10 @@ export default function FlowSignalsPage() {
         height="h-[180px] md:h-[240px]"
       >
         <ResponsiveContainer>
-          <BarChart data={llData}>
+          <BarChart data={llData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-            <XAxis dataKey="lag" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Lag (minutes)', position: 'bottom', fill: '#555', fontSize: 9 }} />
-            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
+            <XAxis dataKey="lag" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Lag (minutes)', position: 'bottom', fill: '#555', fontSize: 9, dy: 10 }} />
+            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Correlation', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
             <ReferenceLine x={0} stroke="#555" strokeDasharray="4 4" />
             <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
             <Bar dataKey="corr" isAnimationActive={false}>
@@ -88,8 +91,8 @@ export default function FlowSignalsPage() {
                 <Cell key={i} fill={d.lag >= 0 ? '#00d4ff' : '#7c3aed'} opacity={0.8} />
               ))}
             </Bar>
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
-              formatter={(v: number) => [`${v.toFixed(4)}`]}
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+              formatter={(v: number) => [`${v.toFixed(4)}`, 'Correlation']}
               labelFormatter={(l) => `Lag: ${l} min`}
             />
           </BarChart>
@@ -104,10 +107,10 @@ export default function FlowSignalsPage() {
           height="h-[200px] md:h-[260px]"
         >
           <ResponsiveContainer>
-            <ComposedChart>
+            <ComposedChart margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-              <XAxis dataKey="bar" type="number" domain={[1, 10]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(0)} bps`} />
+              <XAxis dataKey="bar" type="number" domain={[1, 10]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Minutes ahead', position: 'bottom', fill: '#555', fontSize: 9, dy: 10 }} />
+              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)} bps`} label={{ value: 'Avg return (bps)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -10 }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               {extData?.fwd_curve_buy && (
                 <Line data={extData.fwd_curve_buy} dataKey="avg_bps" stroke="#00ff88" strokeWidth={2} dot={{ r: 3, fill: '#00ff88' }} name={`Buy ext (${extData.n_buy})`} isAnimationActive={false} />
@@ -116,26 +119,29 @@ export default function FlowSignalsPage() {
                 <Line data={extData.fwd_curve_sell} dataKey="avg_bps" stroke="#ff3366" strokeWidth={2} dot={{ r: 3, fill: '#ff3366' }} name={`Sell ext (${extData.n_sell})`} isAnimationActive={false} />
               )}
               <Legend wrapperStyle={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }} formatter={(v: number) => [`${v.toFixed(1)} bps`]} />
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+                formatter={(v: number) => [`${v.toFixed(2)} bps`]}
+                labelFormatter={l => `${l} min ahead`}
+              />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* Flow Persistence */}
         <ChartCard
-          title="Flow Persistence (ACF)"
-          description="How long does a burst of buying or selling last? High bars at lag 1-5 = pressure continues for several minutes. Bars near zero = each minute is independent."
+          title="Flow Persistence (Autocorrelation)"
+          description="Measures how long a burst of buying or selling sustains itself. A high bar at lag 1 means this minute's pressure strongly predicts next minute's pressure. Bars fading toward zero means the burst is dying out and each minute becomes independent."
           height="h-[200px] md:h-[260px]"
         >
           <ResponsiveContainer>
-            <BarChart data={perData}>
+            <BarChart data={perData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-              <XAxis dataKey="lag" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Lag (minutes)', position: 'bottom', fill: '#555', fontSize: 9 }} />
-              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
+              <XAxis dataKey="lag" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Lag (minutes)', position: 'bottom', fill: '#555', fontSize: 9, dy: 10 }} />
+              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Autocorrelation', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               <Bar dataKey="acf" fill="#7c3aed" opacity={0.8} isAnimationActive={false} />
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
-                formatter={(v: number) => [`${v.toFixed(4)}`]}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+                formatter={(v: number) => [`${v.toFixed(4)}`, 'Autocorrelation']}
                 labelFormatter={(l) => `Lag: ${l} min`}
               />
             </BarChart>
