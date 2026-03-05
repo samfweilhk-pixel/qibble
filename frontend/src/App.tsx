@@ -61,10 +61,7 @@ export default function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-accent-cyan glow-cyan tracking-wide">QIBBLE</span>
-              <span className="text-[10px] text-gray-500 hidden sm:inline">BTC Flow Analytics</span>
-            </div>
+            <img src="/qibble-logo.png" alt="Qibble" className="h-10 md:h-12" />
           </div>
           <div className="hidden sm:flex items-center gap-4">
             <span className="text-[10px] text-accent-purple/60 uppercase tracking-widest">All times UTC</span>
