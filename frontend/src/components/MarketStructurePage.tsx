@@ -78,10 +78,10 @@ export default function MarketStructurePage() {
           ))}
         </div>
         <ResponsiveContainer>
-          <BarChart data={todData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
+          <BarChart data={todData} margin={{ top: 5, right: 10, left: 10, bottom: 35 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={h => `${String(h).padStart(2, '0')}:00`} label={{ value: 'Hour (UTC)', position: 'bottom', fill: '#555', fontSize: 9, dy: 10 }} />
-            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: metricYLabels[todMetric], angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
+            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={h => `${String(h).padStart(2, '0')}:00`} label={{ value: 'Hour (UTC)', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
+            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: metricYLabels[todMetric], angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
             {todMetric === 'avg_net_flow' || todMetric === 'avg_bar_imb' ? (
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
             ) : null}
@@ -118,7 +118,7 @@ export default function MarketStructurePage() {
             <BarChart data={sessChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
               <XAxis dataKey="session" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(2)}%`} label={{ value: 'Avg Return %', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
+              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(2)}%`} label={{ value: 'Avg Return %', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               <Bar dataKey="return_pct" isAnimationActive={false}>
                 {sessChartData.map((d, i) => (
@@ -161,7 +161,7 @@ export default function MarketStructurePage() {
         <ChartCard
           title="Session Flow → Next Session Return"
           description="Does buying pressure in one session predict the next session's price move? Each dot is one day. A clear upward slope means the flow signal carries over. The correlation score ranges from -1 to +1: closer to +1 = strong predictive link, near 0 = no link."
-          height="h-[200px] md:h-[260px]"
+          height="h-[280px] md:h-[360px]"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
             {['asia_to_europe', 'europe_to_us'].map(pair => {
@@ -175,10 +175,10 @@ export default function MarketStructurePage() {
                 <div key={pair} className="flex flex-col">
                   <span className="text-[9px] text-gray-400 mb-1">{fromSession} Flow → {toSession} Return — correlation: {corrStr} ({corrStrength})</span>
                   <ResponsiveContainer>
-                    <ScatterChart margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
+                    <ScatterChart margin={{ top: 5, right: 15, left: 15, bottom: 40 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-                      <XAxis dataKey="flow" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Flow" label={{ value: `${fromSession} Net Flow (BTC)`, position: 'bottom', fill: '#555', fontSize: 8, dy: 10 }} />
-                      <YAxis dataKey="return" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Return %" label={{ value: `${toSession} Return %`, angle: -90, position: 'insideLeft', fill: '#555', fontSize: 8, dx: -5 }} />
+                      <XAxis dataKey="flow" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Flow" label={{ value: `${fromSession} Net Flow (BTC)`, position: 'bottom', fill: '#666', fontSize: 9, dy: 18 }} />
+                      <YAxis dataKey="return" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Return %" label={{ value: `${toSession} Return %`, angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
                       <Scatter data={data.points} fill="#00d4ff" opacity={0.4} isAnimationActive={false} />
                       <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                         formatter={(v: number, name: string) => {
@@ -202,10 +202,10 @@ export default function MarketStructurePage() {
         height="h-[200px] md:h-[260px]"
       >
         <ResponsiveContainer>
-          <ComposedChart data={whale}>
+          <ComposedChart data={whale} margin={{ top: 5, right: 15, left: 15, bottom: 35 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-            <XAxis dataKey="date_str" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} interval={Math.floor((whale?.length || 1) / 8)} />
-            <YAxis yAxisId="z" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Z-score', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9 }} />
+            <XAxis dataKey="date_str" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} interval={Math.floor((whale?.length || 1) / 8)} label={{ value: 'Date', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
+            <YAxis yAxisId="z" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Z-score', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, style: { textAnchor: 'middle' } }} />
             <YAxis yAxisId="px" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
             <ReferenceLine yAxisId="z" y={2} stroke="#ff3366" strokeDasharray="4 4" label={{ value: '2σ', fill: '#ff3366', fontSize: 9 }} />
             <ReferenceLine yAxisId="z" y={0} stroke="#2a2a3e" strokeDasharray="3 3" />

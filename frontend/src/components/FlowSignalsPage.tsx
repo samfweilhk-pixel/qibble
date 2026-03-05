@@ -60,7 +60,7 @@ export default function FlowSignalsPage() {
           <ComposedChart margin={{ top: 5, right: 15, left: 15, bottom: 30 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
             <XAxis dataKey="bar" type="number" domain={[1, 10]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Minutes ahead', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
-            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)} bps`} label={{ value: 'Avg return (bps)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -10 }} />
+            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)} bps`} label={{ value: 'Avg return (bps)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -10, style: { textAnchor: 'middle' } }} />
             <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
             {divData?.bullish?.curve && (
               <Line data={divData.bullish.curve} dataKey="avg_bps" stroke="#00ff88" strokeWidth={2} dot={{ r: 3, fill: '#00ff88' }} isAnimationActive={false} />
@@ -86,7 +86,7 @@ export default function FlowSignalsPage() {
           <BarChart data={llData} margin={{ top: 5, right: 15, left: 15, bottom: 35 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
             <XAxis dataKey="lag" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Lag (minutes)', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
-            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Correlation', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
+            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Correlation', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
             <ReferenceLine x={0} stroke="#555" strokeDasharray="4 4" />
             <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
             <Bar dataKey="corr" isAnimationActive={false}>
@@ -117,7 +117,7 @@ export default function FlowSignalsPage() {
             <ComposedChart margin={{ top: 5, right: 15, left: 15, bottom: 35 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
               <XAxis dataKey="bar" type="number" domain={[1, 10]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Minutes ahead', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
-              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)} bps`} label={{ value: 'Avg return (bps)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -10 }} />
+              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)} bps`} label={{ value: 'Avg return (bps)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -10, style: { textAnchor: 'middle' } }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               {extData?.fwd_curve_buy && (
                 <Line data={extData.fwd_curve_buy} dataKey="avg_bps" stroke="#00ff88" strokeWidth={2} dot={{ r: 3, fill: '#00ff88' }} isAnimationActive={false} />
@@ -143,7 +143,7 @@ export default function FlowSignalsPage() {
             <BarChart data={perData} margin={{ top: 5, right: 15, left: 15, bottom: 35 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
               <XAxis dataKey="lag" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Lag (minutes)', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
-              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Autocorrelation', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
+              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Autocorrelation', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               <Bar dataKey="acf" fill="#7c3aed" opacity={0.8} isAnimationActive={false} />
               <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}

@@ -9,13 +9,13 @@ export default function BuySellVolumeChart({ bars }: { bars: BarType[] }) {
     <ChartCard
       title="Buy / Sell Volume"
       description="Buyer vs seller volume each minute. Green = buy volume (someone actively bought BTC at the asking price). Red = sell volume (someone actively sold BTC at the bid price). When green dominates, buyers are more aggressive."
-      height="h-[160px] md:h-[220px]"
+      height="h-[220px] md:h-[300px]"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+        <BarChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
           <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
-          <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Volume (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
+          <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Volume (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
           <Bar dataKey="buy_vol" stackId="vol" fill="#00ff88" opacity={0.8} name="Buy Vol" isAnimationActive={false} />
           <Bar dataKey="sell_vol" stackId="vol" fill="#ff3366" opacity={0.8} name="Sell Vol" isAnimationActive={false} />
           <Tooltip

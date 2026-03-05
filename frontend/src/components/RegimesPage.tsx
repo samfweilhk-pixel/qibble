@@ -62,7 +62,7 @@ export default function RegimesPage() {
           <BarChart data={volTrend} margin={{ top: 5, right: 15, left: 15, bottom: 35 }} barCategoryGap={0} barGap={0}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
             <XAxis dataKey="date_str" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} interval={Math.floor((volTrend?.length || 1) / 8)} label={{ value: 'Date', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
-            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} label={{ value: 'BTC Price (USD)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
+            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} label={{ value: 'BTC Price (USD)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
             <Bar dataKey="close_px" isAnimationActive={false}>
               {(volTrend || []).map((d: any, i: number) => (
                 <Cell key={i} fill={REGIME_COLORS[d.regime] || '#555'} opacity={0.7} />
@@ -120,11 +120,11 @@ export default function RegimesPage() {
         height="h-[200px] md:h-[280px]"
       >
         <ResponsiveContainer>
-          <ComposedChart data={volTrend}>
+          <ComposedChart data={volTrend} margin={{ top: 5, right: 15, left: 15, bottom: 35 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-            <XAxis dataKey="date_str" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} interval={Math.floor((volTrend?.length || 1) / 8)} />
-            <YAxis yAxisId="vol" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} label={{ value: 'Volume (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
-            <YAxis yAxisId="px" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} label={{ value: 'Price (USD)', angle: 90, position: 'insideRight', fill: '#555', fontSize: 9, dx: 5 }} />
+            <XAxis dataKey="date_str" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} interval={Math.floor((volTrend?.length || 1) / 8)} label={{ value: 'Date', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
+            <YAxis yAxisId="vol" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} label={{ value: 'Volume (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
+            <YAxis yAxisId="px" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} label={{ value: 'Price (USD)', angle: 90, position: 'insideRight', fill: '#555', fontSize: 9, dx: 5, style: { textAnchor: 'middle' } }} />
             <Area yAxisId="vol" dataKey="roll_vol_30d" fill="#7c3aed" fillOpacity={0.15} stroke="#7c3aed" strokeWidth={1} isAnimationActive={false} name="30d Avg Vol" />
             <Line yAxisId="px" dataKey="close_px" stroke="#00d4ff" dot={false} strokeWidth={1.5} isAnimationActive={false} name="Price" />
             <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} itemStyle={{ color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}

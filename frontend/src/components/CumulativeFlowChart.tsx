@@ -15,8 +15,8 @@ export default function CumulativeFlowChart({ bars }: { bars: Bar[] }) {
         <ComposedChart data={bars}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
           <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
-          <YAxis yAxisId="flow" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'CVD (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
-          <YAxis yAxisId="ret" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)}%`} label={{ value: 'Return %', angle: 90, position: 'insideRight', fill: '#555', fontSize: 9, dx: 5 }} />
+          <YAxis yAxisId="flow" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'CVD (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
+          <YAxis yAxisId="ret" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)}%`} label={{ value: 'Return %', angle: 90, position: 'insideRight', fill: '#555', fontSize: 9, dx: 5, style: { textAnchor: 'middle' } }} />
           <ReferenceLine yAxisId="flow" y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
           <Area yAxisId="flow" dataKey="cum_flow" fill="#7c3aed" fillOpacity={0.15} stroke="#7c3aed" strokeWidth={1.5} name="CVD (BTC)" isAnimationActive={false} />
           <Line yAxisId="ret" dataKey="cum_return" stroke="#ffd700" dot={false} strokeWidth={2} name="Return %" isAnimationActive={false} />
