@@ -8,7 +8,7 @@ export default function ImbalanceChart({ bars }: { bars: BarType[] }) {
   return (
     <ChartCard
       title="Bar Imbalance"
-      description="Balance between buyers and sellers per minute. +1 = all buyers. -1 = all sellers. Near 0 = balanced."
+      description="Ratio of buy vs sell volume each minute, scaled from -1 to +1. A value of +0.5 means 75% of that minute's volume was buying. A value of -0.5 means 75% was selling. Near 0 = roughly equal buying and selling."
       height="h-[180px] md:h-[240px]"
     >
       <ResponsiveContainer width="100%" height="100%">

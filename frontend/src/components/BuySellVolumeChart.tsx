@@ -8,7 +8,7 @@ export default function BuySellVolumeChart({ bars }: { bars: BarType[] }) {
   return (
     <ChartCard
       title="Buy / Sell Volume"
-      description="Who's more aggressive each minute — buyers or sellers? Green = buyers hitting the ask. Red = sellers hitting the bid."
+      description="Buyer vs seller volume each minute. Green = buy volume (someone actively bought BTC at the asking price). Red = sell volume (someone actively sold BTC at the bid price). When green dominates, buyers are more aggressive."
       height="h-[160px] md:h-[220px]"
     >
       <ResponsiveContainer width="100%" height="100%">

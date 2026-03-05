@@ -8,7 +8,7 @@ export default function CumulativeFlowChart({ bars }: { bars: Bar[] }) {
   return (
     <ChartCard
       title="CVD vs Price Return"
-      description="Cumulative buying pressure vs price change since midnight UTC. When the purple area rises but the yellow line drops, buyers are accumulating but price hasn't followed yet."
+      description="Cumulative Volume Delta (CVD) vs price return since midnight UTC. CVD (purple area, left axis) is the running total of buy volume minus sell volume — it tracks whether more people have been buying or selling overall today. The yellow line (right axis) shows price change. When CVD rises but price drops, buyers are stepping in but price hasn't responded yet."
       height="h-[200px] md:h-[280px]"
     >
       <ResponsiveContainer>

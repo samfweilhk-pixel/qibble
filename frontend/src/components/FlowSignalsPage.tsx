@@ -42,7 +42,7 @@ export default function FlowSignalsPage() {
       {/* Divergence */}
       <ChartCard
         title="Flow-Price Divergence"
-        description="Detects when buying/selling pressure disconnects from price. Green = buyers active but price flat or down (expect bounce). Red = sellers active but price flat or up (expect drop). Shows average price move over next 1-10 minutes after each event. Values are in basis points (bps) — 1 bps = 0.01% price change, so 5 bps = 0.05%."
+        description="Detects when buying/selling pressure disconnects from price. Green = buyers active but price flat or down (potential bounce). Red = sellers active but price flat or up (potential drop). The sigma (σ) buttons filter by how extreme the divergence is — higher σ = rarer, stronger events but fewer of them. Shows the average price move 1-10 minutes after each event, in basis points (bps) — 1 bps = 0.01% price change, so 5 bps = 0.05%."
         height="h-[280px] md:h-[360px]"
       >
         <div className="flex gap-2 mb-2">
@@ -79,7 +79,7 @@ export default function FlowSignalsPage() {
       {/* Lead-Lag */}
       <ChartCard
         title="Lead-Lag Cross-Correlation"
-        description="Does buying pressure predict future price moves? Bars to the right of zero = flow leads price (predictive). Bars to the left = price moves first, flow follows (reactive). Taller bar = stronger relationship."
+        description="Does buying/selling pressure predict future price moves, or does price move first? Each bar shows the correlation between flow and price at different time offsets. Bars to the right of zero = flow happened first, then price moved (flow is predictive). Bars to the left = price moved first, then flow followed (flow is reactive). Taller bars = stronger relationship. Cyan = flow leads, Purple = price leads."
         height="h-[220px] md:h-[300px]"
       >
         <ResponsiveContainer>

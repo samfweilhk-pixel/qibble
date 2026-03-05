@@ -14,7 +14,7 @@ export default function PriceVolumeChart({ bars }: { bars: BarType[] }) {
   return (
     <ChartCard
       title="Price + Volume"
-      description="BTC price and total trading volume per minute. Tall bars = heavy trading activity."
+      description="BTC price (blue line, right axis) and total trading volume (blue bars, left axis) per minute. Taller bars = more BTC traded that minute. Dashed lines mark when major trading sessions open: Asia (00:00 UTC), Europe (08:00), and US (14:00)."
     >
       <ResponsiveContainer>
         <ComposedChart data={bars}>

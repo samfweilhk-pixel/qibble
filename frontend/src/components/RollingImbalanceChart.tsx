@@ -8,7 +8,7 @@ export default function RollingImbalanceChart({ bars }: { bars: Bar[] }) {
   return (
     <ChartCard
       title="Rolling Imbalance (20-bar)"
-      description="Smoothed buyer/seller balance over the last 20 minutes. Shows the trend direction of trading pressure."
+      description="Average buy/sell imbalance over the last 20 minutes (smoothed version of the Bar Imbalance chart). Positive = buying has dominated recently. Negative = selling has dominated. This filters out minute-to-minute noise to show the broader pressure trend."
       height="h-[150px] md:h-[200px]"
     >
       <ResponsiveContainer width="100%" height="100%">
