@@ -37,6 +37,13 @@ export default function MarketStructurePage() {
     avg_trade_size: 'AVG TRADE SIZE',
   }
 
+  const metricYLabels: Record<string, string> = {
+    avg_net_flow: 'Net Flow (BTC)',
+    avg_bar_imb: 'Imbalance',
+    avg_volume: 'Volume (BTC)',
+    avg_trade_size: 'Avg Trade Size (BTC)',
+  }
+
   // Session performance bars
   const sessChartData = sessData
     ? ['ASIA', 'EUROPE', 'US'].map(s => ({ session: s, return_pct: sessData[s]?.avg_return || 0, volume: sessData[s]?.avg_volume || 0 }))
@@ -71,10 +78,10 @@ export default function MarketStructurePage() {
           ))}
         </div>
         <ResponsiveContainer>
-          <BarChart data={todData}>
+          <BarChart data={todData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={h => `${String(h).padStart(2, '0')}:00`} />
-            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
+            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={h => `${String(h).padStart(2, '0')}:00`} label={{ value: 'Hour (UTC)', position: 'bottom', fill: '#555', fontSize: 9, dy: 10 }} />
+            <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: metricYLabels[todMetric], angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
             {todMetric === 'avg_net_flow' || todMetric === 'avg_bar_imb' ? (
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
             ) : null}
@@ -87,9 +94,14 @@ export default function MarketStructurePage() {
                 } opacity={0.8} />
               ))}
             </Bar>
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
               labelFormatter={h => `${String(h).padStart(2, '0')}:00 UTC`}
-              formatter={(v: number) => [todMetric.includes('imb') ? `${(v * 100).toFixed(2)}%` : v.toFixed(4)]}
+              formatter={(v: number) => {
+                if (todMetric === 'avg_bar_imb') return [`${(v * 100).toFixed(2)}%`, 'Imbalance']
+                if (todMetric === 'avg_net_flow') return [`${v.toFixed(2)} BTC`, 'Net Flow']
+                if (todMetric === 'avg_volume') return [`${v.toFixed(2)} BTC`, 'Volume']
+                return [`${v.toFixed(4)} BTC`, 'Avg Trade Size']
+              }}
             />
           </BarChart>
         </ResponsiveContainer>
@@ -103,17 +115,17 @@ export default function MarketStructurePage() {
           height="h-[180px] md:h-[220px]"
         >
           <ResponsiveContainer>
-            <BarChart data={sessChartData}>
+            <BarChart data={sessChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
               <XAxis dataKey="session" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
-              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(2)}%`} />
+              <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(2)}%`} label={{ value: 'Avg Return %', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5 }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               <Bar dataKey="return_pct" isAnimationActive={false}>
                 {sessChartData.map((d, i) => (
                   <Cell key={i} fill={SESSION_COLORS[d.session]} opacity={0.8} />
                 ))}
               </Bar>
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
                 formatter={(v: number) => [`${v.toFixed(3)}%`, 'Avg Return']}
               />
             </BarChart>
@@ -127,17 +139,17 @@ export default function MarketStructurePage() {
           height="h-[180px] md:h-[220px]"
         >
           <ResponsiveContainer>
-            <BarChart data={classChartData} layout="vertical">
+            <BarChart data={classChartData} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-              <XAxis type="number" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v}%`} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v}%`} label={{ value: '% of Days', position: 'bottom', fill: '#555', fontSize: 9 }} />
               <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} width={70} />
               <Bar dataKey="pct" isAnimationActive={false}>
                 {classChartData.map((d, i) => (
                   <Cell key={i} fill={d.fill} opacity={0.8} />
                 ))}
               </Bar>
-              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
-                formatter={(v: number) => [`${v.toFixed(1)}%`]}
+              <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+                formatter={(v: number) => [`${v.toFixed(1)}%`, '% of Days']}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -148,24 +160,32 @@ export default function MarketStructurePage() {
       {sessFwdData && (
         <ChartCard
           title="Session Flow → Next Session Return"
-          description="Does buying pressure in one session predict the next session's price move? Each dot is one day. A clear upward slope = the signal carries over."
+          description="Does buying pressure in one session predict the next session's price move? Each dot is one day. A clear upward slope means the flow signal carries over. The correlation score ranges from -1 to +1: closer to +1 = strong predictive link, near 0 = no link."
           height="h-[200px] md:h-[260px]"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
             {['asia_to_europe', 'europe_to_us'].map(pair => {
               const data = sessFwdData[pair]
               if (!data) return null
-              const label = pair === 'asia_to_europe' ? 'Asia Flow → Europe Return' : 'Europe Flow → US Return'
+              const fromSession = pair === 'asia_to_europe' ? 'Asia' : 'Europe'
+              const toSession = pair === 'asia_to_europe' ? 'Europe' : 'US'
+              const corrStr = data.correlation.toFixed(3)
+              const corrStrength = Math.abs(data.correlation) < 0.05 ? 'very weak' : Math.abs(data.correlation) < 0.15 ? 'weak' : 'moderate'
               return (
                 <div key={pair} className="flex flex-col">
-                  <span className="text-[9px] text-gray-400 mb-1">{label} (r={data.correlation.toFixed(3)})</span>
+                  <span className="text-[9px] text-gray-400 mb-1">{fromSession} Flow → {toSession} Return — correlation: {corrStr} ({corrStrength})</span>
                   <ResponsiveContainer>
-                    <ScatterChart>
+                    <ScatterChart margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-                      <XAxis dataKey="flow" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Flow" />
-                      <YAxis dataKey="return" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Return %" />
+                      <XAxis dataKey="flow" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Flow" label={{ value: `${fromSession} Net Flow (BTC)`, position: 'bottom', fill: '#555', fontSize: 8, dy: 10 }} />
+                      <YAxis dataKey="return" type="number" tick={{ fontSize: 9, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} name="Return %" label={{ value: `${toSession} Return %`, angle: -90, position: 'insideLeft', fill: '#555', fontSize: 8, dx: -5 }} />
                       <Scatter data={data.points} fill="#00d4ff" opacity={0.4} isAnimationActive={false} />
-                      <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} />
+                      <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
+                        formatter={(v: number, name: string) => {
+                          if (name === 'Flow') return [`${v.toFixed(1)} BTC`, 'Net Flow']
+                          return [`${v.toFixed(3)}%`, 'Return']
+                        }}
+                      />
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
@@ -195,7 +215,7 @@ export default function MarketStructurePage() {
               ))}
             </Bar>
             <Line yAxisId="px" dataKey="close" stroke="#00d4ff" dot={false} strokeWidth={1} opacity={0.5} isAnimationActive={false} />
-            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11 }} labelStyle={{ color: '#00d4ff' }}
+            <Tooltip contentStyle={{ background: '#111118', border: '1px solid #2a2a3e', borderRadius: 6, fontSize: 11, color: '#e5e5e5' }} labelStyle={{ color: '#00d4ff' }}
               formatter={(v: number, name: string) => {
                 if (name === 'close') return [`$${v.toLocaleString()}`, 'Price']
                 return [`${v.toFixed(2)}σ`, 'Whale Z']
