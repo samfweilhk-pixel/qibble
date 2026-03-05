@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0a0a0f;
+  color: #e0e0e0;
+  font-family: 'JetBrains Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a3e;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a4e;
+}
+
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+.glow-green {
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+.glow-red {
+  text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+}
+
+.card {
+  background: rgba(17, 17, 24, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid #1e1e2e;
+  border-radius: 8px;
+}
+.card:hover {
+  border-color: #2a2a3e;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #111118 !important;
+  border: 1px solid #2a2a3e !important;
+  border-radius: 6px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  fill: #666;
+}

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: qibble
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health

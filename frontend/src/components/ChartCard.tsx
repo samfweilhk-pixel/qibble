@@ -1,0 +1,16 @@
+interface Props {
+  title: string
+  description: string
+  children: React.ReactNode
+  height?: string
+}
+
+export default function ChartCard({ title, description, children, height = 'h-[220px] md:h-[300px]' }: Props) {
+  return (
+    <div className="card p-4">
+      <h3 className="text-xs uppercase tracking-wider text-accent-cyan mb-1">{title}</h3>
+      <p className="text-[9px] text-accent-purple/70 mb-3 tracking-wide">{description}</p>
+      <div className={height}>{children}</div>
+    </div>
+  )
+}
