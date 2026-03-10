@@ -10,7 +10,7 @@ export default function ChartCard({ title, description, children, height = 'h-[2
     <div className="card p-4">
       <h3 className="text-xs uppercase tracking-wider text-accent-cyan mb-1">{title}</h3>
       <p className="text-[9px] text-gray-400 mb-3 tracking-wide leading-relaxed">{description}</p>
-      <div className={height}>{children}</div>
+      <div className={`${height} overflow-visible`}>{children}</div>
     </div>
   )
 }
