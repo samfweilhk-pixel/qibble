@@ -16,6 +16,9 @@ on:
     - cron: "0 1 * * *"     # 8:00 PM ET (next day UTC)
   workflow_dispatch: # Manual trigger for testing
 
+permissions:
+  contents: write
+
 jobs:
   post:
     runs-on: ubuntu-latest
