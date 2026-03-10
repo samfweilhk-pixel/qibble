@@ -10,7 +10,9 @@ from dotenv import load_dotenv
 import os
 import json
 import random
-from datetime import datetime
+import requests
+import time
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 load_dotenv(Path(__file__).parent / ".env")
@@ -18,6 +20,8 @@ load_dotenv(Path(__file__).parent / ".env")
 SCRIPT_DIR = Path(__file__).parent
 DATA_PATH = SCRIPT_DIR / "../data/btc_1m.parquet"
 POSTED_LOG = SCRIPT_DIR / "posted_days.json"
+
+BINANCE_URL = "https://data-api.binance.vision/api/v3/klines"
 
 # ── Load posted days log ──
 def load_posted():
@@ -28,9 +32,71 @@ def load_posted():
 def save_posted(posted):
     POSTED_LOG.write_text(json.dumps(sorted(posted)))
 
-# ── Load data + regimes ──
+
+def fetch_recent_from_binance(last_ts):
+    """Fetch any bars after last_ts from Binance and return as DataFrame."""
+    start_ms = int(last_ts.timestamp() * 1000) + 60_000
+    end_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    if start_ms >= end_ms:
+        return pd.DataFrame()
+
+    all_bars = []
+    cursor_ms = start_ms
+    while cursor_ms < end_ms:
+        params = {
+            "symbol": "BTCUSDT", "interval": "1m",
+            "startTime": cursor_ms, "endTime": end_ms, "limit": 1000,
+        }
+        resp = requests.get(BINANCE_URL, params=params, timeout=30)
+        resp.raise_for_status()
+        raw = resp.json()
+        if not raw:
+            break
+        all_bars.extend(raw)
+        cursor_ms = raw[-1][0] + 60_000
+        if len(raw) < 1000:
+            break
+        time.sleep(0.6)
+
+    if not all_bars:
+        return pd.DataFrame()
+
+    cols = ["open_time", "open", "high", "low", "close", "volume",
+            "close_time", "quote_volume", "num_trades",
+            "taker_buy_vol", "taker_buy_quote_vol", "ignore"]
+    new = pd.DataFrame(all_bars, columns=cols)
+    new["open_time"] = pd.to_datetime(new["open_time"], unit="ms", utc=True)
+    new["close_time"] = pd.to_datetime(new["close_time"], unit="ms", utc=True)
+    for c in ["open", "high", "low", "close", "volume", "quote_volume",
+              "taker_buy_vol", "taker_buy_quote_vol"]:
+        new[c] = new[c].astype(float)
+    new["num_trades"] = new["num_trades"].astype(int)
+    new.drop(columns=["ignore"], inplace=True)
+    new["buy_vol"] = new["taker_buy_vol"]
+    new["sell_vol"] = new["volume"] - new["taker_buy_vol"]
+    new["net_flow"] = new["buy_vol"] - new["sell_vol"]
+    new["bar_imbalance"] = np.where(new["volume"] > 0, new["net_flow"] / new["volume"], 0.0)
+    new["pct_return"] = (new["close"] / new["open"] - 1) * 100
+    new["avg_trade_size"] = np.where(new["num_trades"] > 0, new["volume"] / new["num_trades"], 0.0)
+    new["date_utc"] = new["open_time"].dt.date.astype(str)
+    return new
+
+
+# ── Load data + fetch fresh bars from Binance ──
 df = pd.read_parquet(DATA_PATH)
 df["open_time"] = pd.to_datetime(df["open_time"], utc=True)
+
+last_ts = df["open_time"].max()
+print(f"Parquet ends at {last_ts}. Fetching new data from Binance...")
+fresh = fetch_recent_from_binance(last_ts)
+if len(fresh) > 0:
+    df = pd.concat([df, fresh], ignore_index=True)
+    df.drop_duplicates(subset=["open_time"], keep="last", inplace=True)
+    df.sort_values("open_time", inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    print(f"  Added {len(fresh)} bars. Now {len(df)} total, through {df['open_time'].max()}")
+else:
+    print("  Already up to date.")
 
 daily = df.groupby("date_utc").agg(
     open=("open", "first"), close=("close", "last"),

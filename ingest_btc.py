@@ -25,7 +25,7 @@ INTERVAL = "1m"
 BARS_PER_REQUEST = 1000
 REQUEST_DELAY_S = 0.6  # 600ms between requests → ~100 req/min
 SAVE_EVERY = 500  # Write parquet every N requests
-OUTDIR = os.path.dirname(os.path.abspath(__file__))
+OUTDIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 OUTFILE = os.path.join(OUTDIR, "btc_1m.parquet")
 
 # 5 years back from today
