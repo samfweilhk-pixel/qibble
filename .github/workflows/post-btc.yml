@@ -1,0 +1,51 @@
+name: Post BTC Daily Flow
+
+on:
+  schedule:
+    # 10 posts/day during high-engagement hours (US mornings/afternoons, UTC)
+    # ~every 1-1.5 hrs from 13:00-23:00 UTC (8am-6pm ET)
+    - cron: "0 13 * * *"    # 8:00 AM ET
+    - cron: "10 14 * * *"   # 9:10 AM ET
+    - cron: "20 15 * * *"   # 10:20 AM ET
+    - cron: "30 16 * * *"   # 11:30 AM ET
+    - cron: "0 18 * * *"    # 1:00 PM ET
+    - cron: "15 19 * * *"   # 2:15 PM ET
+    - cron: "30 20 * * *"   # 3:30 PM ET
+    - cron: "0 22 * * *"    # 5:00 PM ET
+    - cron: "30 23 * * *"   # 6:30 PM ET
+    - cron: "0 1 * * *"     # 8:00 PM ET (next day UTC)
+  workflow_dispatch: # Manual trigger for testing
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install tweepy pandas numpy matplotlib pytz python-dotenv pyarrow
+
+      - name: Run auto poster
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python x-posting/auto_poster.py
+
+      - name: Commit posted_days.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add x-posting/posted_days.json
+          git diff --staged --quiet || git commit -m "Update posted_days.json"
+          git push
