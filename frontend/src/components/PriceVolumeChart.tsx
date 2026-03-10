@@ -17,9 +17,9 @@ export default function PriceVolumeChart({ bars }: { bars: BarType[] }) {
       description="BTC price (blue line, right axis) and total trading volume (blue bars, left axis) per minute. Taller bars = more BTC traded that minute. Dashed lines mark when major trading sessions open: Asia (00:00 UTC), Europe (08:00), and US (14:00)."
     >
       <ResponsiveContainer>
-        <ComposedChart data={bars}>
+        <ComposedChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
+          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} label={{ value: 'Time (UTC)', position: 'bottom', fill: '#666', fontSize: 10, dy: 10 }} />
           <YAxis yAxisId="vol" orientation="left" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(0)}`} label={{ value: 'Volume (BTC)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
           <YAxis yAxisId="px" orientation="right" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} domain={['auto', 'auto']} tickFormatter={v => `$${v.toLocaleString()}`} label={{ value: 'Price (USD)', angle: 90, position: 'insideRight', fill: '#555', fontSize: 9, dx: 5, style: { textAnchor: 'middle' } }} />
           {SESSION_LINES.map(s => (

@@ -68,7 +68,7 @@ export default function MarketStructurePage() {
       <ChartCard
         title="Time-of-Day Profile"
         description="Average trading patterns by hour of day, relative to the overall average across all regimes. For Net Flow and Imbalance: positive = more buying pressure than normal, negative = more selling than normal. Volume and Trade Size show absolute values."
-        height="h-[220px] md:h-[300px]"
+        height="h-[260px] md:h-[340px]"
       >
         <div className="flex gap-2 mb-2">
           {Object.entries(metricLabels).map(([k, v]) => (
@@ -112,12 +112,12 @@ export default function MarketStructurePage() {
         <ChartCard
           title="Session Performance"
           description="Which part of the world drives BTC's daily move? Shows average return during each trading session."
-          height="h-[180px] md:h-[220px]"
+          height="h-[210px] md:h-[260px]"
         >
           <ResponsiveContainer>
-            <BarChart data={sessChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <BarChart data={sessChartData} margin={{ top: 5, right: 10, left: 10, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-              <XAxis dataKey="session" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} />
+              <XAxis dataKey="session" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Session', position: 'bottom', fill: '#666', fontSize: 10, dy: 10 }} />
               <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(2)}%`} label={{ value: 'Avg Return %', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
               <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
               <Bar dataKey="return_pct" isAnimationActive={false}>
@@ -136,12 +136,12 @@ export default function MarketStructurePage() {
         <ChartCard
           title="Daily Flow Classification"
           description="On how many days does buying pressure actually move price up? 'Aligned' = flow and price move together. 'Divergent' = they move opposite — often a reversal signal."
-          height="h-[180px] md:h-[220px]"
+          height="h-[210px] md:h-[260px]"
         >
           <ResponsiveContainer>
-            <BarChart data={classChartData} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <BarChart data={classChartData} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-              <XAxis type="number" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v}%`} label={{ value: '% of Days', position: 'bottom', fill: '#555', fontSize: 9 }} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v}%`} label={{ value: '% of Days', position: 'bottom', fill: '#666', fontSize: 10, dy: 10 }} />
               <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} width={70} />
               <Bar dataKey="pct" isAnimationActive={false}>
                 {classChartData.map((d, i) => (

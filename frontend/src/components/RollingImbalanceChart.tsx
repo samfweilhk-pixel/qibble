@@ -12,7 +12,7 @@ export default function RollingImbalanceChart({ bars }: { bars: Bar[] }) {
       height="h-[220px] md:h-[300px]"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
+        <AreaChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 30 }}>
           <defs>
             <linearGradient id="imbGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
@@ -20,7 +20,7 @@ export default function RollingImbalanceChart({ bars }: { bars: Bar[] }) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
+          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} label={{ value: 'Time (UTC)', position: 'bottom', fill: '#666', fontSize: 10, dy: 10 }} />
           <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Imbalance', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
           <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
           <Area dataKey="rolling_imb_20" stroke="#7c3aed" strokeWidth={2} fill="url(#imbGrad)" isAnimationActive={false} />

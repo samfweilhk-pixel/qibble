@@ -51,7 +51,7 @@ export default function RegimesPage() {
       <ChartCard
         title="Regime Timeline"
         description="BTC price colored by market regime. Green = Bull (30-day return above +10%, price trending up). Red = Bear (30-day return below -10%, price trending down). Yellow = Chop (sideways, between -10% and +10%). A regime must persist for 14+ days before switching to avoid false signals from short-term swings."
-        height="h-[260px] md:h-[360px]"
+        height="h-[300px] md:h-[400px]"
       >
         <div className="flex gap-4 mb-2 text-[10px]">
           <span style={{ color: '#00ff88' }}>● Bull (up 10%+)</span>

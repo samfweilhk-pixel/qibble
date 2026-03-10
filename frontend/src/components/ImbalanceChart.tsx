@@ -12,9 +12,9 @@ export default function ImbalanceChart({ bars }: { bars: BarType[] }) {
       height="h-[180px] md:h-[240px]"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+        <BarChart data={bars} margin={{ top: 5, right: 10, left: 10, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
-          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} />
+          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} ticks={ticks} label={{ value: 'Time (UTC)', position: 'bottom', fill: '#666', fontSize: 10, dy: 10 }} />
           <YAxis domain={[-1, 1]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Imbalance', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -5, style: { textAnchor: 'middle' } }} />
           <ReferenceLine y={0} stroke="#2a2a3e" strokeDasharray="3 3" />
           <Bar dataKey="bar_imb" isAnimationActive={false}>

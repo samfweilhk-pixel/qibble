@@ -61,7 +61,7 @@ export default function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <img src="/qibble-logo.png" alt="Qibble" className="h-24 md:h-28" />
+            <img src="/qibble-logo.png" alt="Qibble" className="h-12 sm:h-14" />
           </div>
           <div className="hidden sm:flex items-center gap-4">
             <span className="text-[10px] text-accent-purple/60 uppercase tracking-widest">All times UTC</span>

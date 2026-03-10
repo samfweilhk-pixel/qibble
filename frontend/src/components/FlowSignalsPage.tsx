@@ -43,7 +43,7 @@ export default function FlowSignalsPage() {
       <ChartCard
         title="Flow-Price Divergence"
         description="Detects when buying/selling pressure disconnects from price. Green = buyers active but price flat or down (potential bounce). Red = sellers active but price flat or up (potential drop). The sigma (σ) buttons filter by how extreme the divergence is — higher σ = rarer, stronger events but fewer of them. Shows the average price move 1-10 minutes after each event, in basis points (bps) — 1 bps = 0.01% price change, so 5 bps = 0.05%."
-        height="h-[280px] md:h-[360px]"
+        height="h-[320px] md:h-[400px]"
       >
         <div className="flex gap-2 mb-2">
           {['-1.0', '-1.5', '-2.0'].map(t => (
@@ -57,7 +57,7 @@ export default function FlowSignalsPage() {
           {divData?.bearish && <span className="text-accent-red">● Bearish divergence ({divData.bearish.n} events)</span>}
         </div>
         <ResponsiveContainer>
-          <ComposedChart margin={{ top: 5, right: 15, left: 15, bottom: 30 }}>
+          <ComposedChart margin={{ top: 5, right: 15, left: 15, bottom: 35 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
             <XAxis dataKey="bar" type="number" domain={[1, 10]} tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} label={{ value: 'Minutes ahead', position: 'bottom', fill: '#666', fontSize: 10, dy: 15 }} />
             <YAxis tick={{ fontSize: 10, fill: '#555' }} tickLine={false} axisLine={{ stroke: '#1e1e2e' }} tickFormatter={v => `${v.toFixed(1)} bps`} label={{ value: 'Avg return (bps)', angle: -90, position: 'insideLeft', fill: '#555', fontSize: 9, dx: -10, style: { textAnchor: 'middle' } }} />
