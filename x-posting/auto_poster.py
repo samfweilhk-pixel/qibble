@@ -240,7 +240,7 @@ ax1.set_ylabel("Price ($)", color="#8b8fa3", fontsize=10)
 ax1.set_title(f"BTC — {date_display}  [{regime}]", color="white", fontsize=14, fontweight="bold", pad=12)
 
 # Regime badge
-ax1.text(0.02, 0.95, regime, transform=ax1.transAxes, fontsize=11, fontweight="bold",
+ax1.text(0.02, 0.95, f"30d: {regime}", transform=ax1.transAxes, fontsize=11, fontweight="bold",
          va="top", ha="left", color=regime_color,
          bbox=dict(boxstyle="round,pad=0.3", facecolor="#1a1d2e", edgecolor=regime_color, alpha=0.9))
 
