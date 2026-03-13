@@ -26,7 +26,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
@@ -35,7 +35,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install tweepy pandas numpy matplotlib pytz python-dotenv pyarrow
+        run: pip install tweepy pandas numpy matplotlib pytz python-dotenv requests
 
       - name: Run auto poster
         env:

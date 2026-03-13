@@ -1,1 +1,1 @@
-data/*.parquet filter=lfs diff=lfs merge=lfs -text
+# LFS removed — parquet served via GitHub Release asset

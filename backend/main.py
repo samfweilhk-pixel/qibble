@@ -12,6 +12,19 @@ from fastapi.responses import FileResponse
 import pandas as pd
 import numpy as np
 import os
+import time as time_module
+import threading
+import logging
+import requests
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+log = logging.getLogger("qibble-sync")
+
+# Lock for swapping global data structures during background sync
+data_lock = threading.Lock()
+
+BINANCE_URL = "https://data-api.binance.vision/api/v3/klines"
+SYNC_INTERVAL_S = 6 * 3600  # 6 hours
 
 app = FastAPI(title="Qibble BTC Dashboard")
 
@@ -712,6 +725,144 @@ print("Computing regime daily overlays...")
 REGIME_DAILY = _build_regime_daily()
 
 print("All pre-computations complete!")
+
+
+# ── Background Data Sync ────────────────────────────────────────────────
+
+def _fetch_klines_batch(start_ms):
+    """Fetch up to 1000 1-min klines from Binance starting at start_ms."""
+    params = {
+        "symbol": "BTCUSDT", "interval": "1m",
+        "startTime": start_ms, "limit": 1000,
+    }
+    resp = requests.get(BINANCE_URL, params=params, timeout=30)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _raw_to_df(raw_bars):
+    """Convert raw Binance kline arrays to a typed DataFrame with derived columns."""
+    cols = ["open_time", "open", "high", "low", "close", "volume",
+            "close_time", "quote_volume", "num_trades",
+            "taker_buy_vol", "taker_buy_quote_vol", "ignore"]
+    new = pd.DataFrame(raw_bars, columns=cols)
+    new["open_time"] = pd.to_datetime(new["open_time"], unit="ms", utc=True)
+    new["close_time"] = pd.to_datetime(new["close_time"], unit="ms", utc=True)
+    for c in ["open", "high", "low", "close", "volume", "quote_volume",
+              "taker_buy_vol", "taker_buy_quote_vol"]:
+        new[c] = new[c].astype(float)
+    new["num_trades"] = new["num_trades"].astype(int)
+    new.drop(columns=["ignore"], inplace=True)
+    new["buy_vol"] = new["taker_buy_vol"]
+    new["sell_vol"] = new["volume"] - new["taker_buy_vol"]
+    new["net_flow"] = new["buy_vol"] - new["sell_vol"]
+    new["bar_imbalance"] = np.where(new["volume"] > 0, new["net_flow"] / new["volume"], 0.0)
+    new["pct_return"] = (new["close"] / new["open"] - 1) * 100
+    new["avg_trade_size"] = np.where(new["num_trades"] > 0, new["volume"] / new["num_trades"], 0.0)
+    new["date_utc"] = new["open_time"].dt.date.astype(str)
+    new["time"] = new["open_time"].dt.strftime("%H:%M")
+    new["date_str"] = new["date_utc"]
+    return new
+
+
+def _sync_once():
+    """Fetch new bars from Binance, append to df, recompute all analytics."""
+    global df, DAILY_AGG, REGIMES
+    global INTRADAY_CORR, LEAD_LAG, FLOW_EXTREMES, CORR_DIVERGENCE
+    global FLOW_TOD, SESSION_PERF, SESSION_FLOW_FWD, WHALE_ACTIVITY
+    global FLOW_PERSISTENCE, FLOW_CLASSIFICATION, VOLUME_TREND, REGIME_DAILY
+
+    last_ts = df["open_time"].max()
+    start_ms = int(last_ts.timestamp() * 1000) + 60_000
+    log.info(f"Sync: fetching bars since {last_ts}...")
+
+    all_bars = []
+    cursor_ms = start_ms
+    while True:
+        raw = _fetch_klines_batch(cursor_ms)
+        if not raw:
+            break
+        all_bars.extend(raw)
+        cursor_ms = raw[-1][0] + 60_000
+        if len(raw) < 1000:
+            break
+        time_module.sleep(0.6)
+
+    if not all_bars:
+        log.info("Sync: no new bars")
+        return
+
+    new_df = _raw_to_df(all_bars)
+    log.info(f"Sync: fetched {len(new_df)} new bars")
+
+    # Merge
+    merged = pd.concat([df, new_df], ignore_index=True)
+    merged.drop_duplicates(subset=["open_time"], keep="last", inplace=True)
+    merged.sort_values("open_time", inplace=True)
+    merged.reset_index(drop=True, inplace=True)
+
+    # Save to disk (survives container restarts within same deployment)
+    try:
+        merged.to_parquet(DATA_PATH, index=False)
+        log.info(f"Sync: saved {len(merged)} bars to {DATA_PATH}")
+    except Exception as e:
+        log.warning(f"Sync: failed to save parquet: {e}")
+
+    # Swap df and recompute
+    df = merged
+
+    log.info("Sync: recomputing all analytics...")
+    new_regimes = _detect_regimes()
+    df["regime"] = df["date_str"].map(new_regimes["map"]).fillna("CHOP")
+
+    new_daily_agg = _build_daily_agg()
+    new_intraday_corr = _build_intraday_corr()
+    new_lead_lag = _build_lead_lag()
+    new_flow_extremes = _build_flow_extremes()
+    new_corr_div = _build_corr_divergence()
+    new_flow_tod = _build_flow_tod()
+    new_session_perf = _build_session_performance()
+    new_session_flow = _build_session_flow_fwd()
+    new_whale = _build_whale_activity()
+    new_persistence = _build_flow_persistence()
+    new_classification = _build_flow_classification()
+    new_volume = _build_volume_trend()
+    new_regime_daily = _build_regime_daily()
+
+    # Atomic swap under lock
+    with data_lock:
+        REGIMES = new_regimes
+        DAILY_AGG = new_daily_agg
+        INTRADAY_CORR = new_intraday_corr
+        LEAD_LAG = new_lead_lag
+        FLOW_EXTREMES = new_flow_extremes
+        CORR_DIVERGENCE = new_corr_div
+        FLOW_TOD = new_flow_tod
+        SESSION_PERF = new_session_perf
+        SESSION_FLOW_FWD = new_session_flow
+        WHALE_ACTIVITY = new_whale
+        FLOW_PERSISTENCE = new_persistence
+        FLOW_CLASSIFICATION = new_classification
+        VOLUME_TREND = new_volume
+        REGIME_DAILY = new_regime_daily
+
+    log.info(f"Sync: complete. {len(df)} total bars, {df['date_str'].nunique()} days")
+
+
+def _sync_loop():
+    """Background loop: sync every SYNC_INTERVAL_S seconds."""
+    while True:
+        time_module.sleep(SYNC_INTERVAL_S)
+        try:
+            _sync_once()
+        except Exception as e:
+            log.error(f"Sync failed: {e}")
+
+
+# Start background sync thread
+_sync_thread = threading.Thread(target=_sync_loop, daemon=True)
+_sync_thread.start()
+log.info(f"Background sync started (every {SYNC_INTERVAL_S // 3600}h)")
 
 
 # ── API Endpoints ───────────────────────────────────────────────────────

@@ -1,4 +1,8 @@
-"""Automated X poster for @qibbler — random historical BTC day with chart."""
+"""Automated X poster for @qibbler — random historical BTC day with chart.
+
+Fetches all data from Binance public API directly. No parquet file needed.
+Daily klines (~2 API calls) for regime detection + minute klines (~2 API calls) for the chosen day.
+"""
 import tweepy
 import pandas as pd
 import numpy as np
@@ -18,10 +22,10 @@ from pathlib import Path
 load_dotenv(Path(__file__).parent / ".env")
 
 SCRIPT_DIR = Path(__file__).parent
-DATA_PATH = SCRIPT_DIR / "../data/btc_1m.parquet"
 POSTED_LOG = SCRIPT_DIR / "posted_days.json"
 
 BINANCE_URL = "https://data-api.binance.vision/api/v3/klines"
+HISTORY_START_MS = int(datetime(2021, 3, 1, tzinfo=timezone.utc).timestamp() * 1000)
 
 # ── Load posted days log ──
 def load_posted():
@@ -33,12 +37,47 @@ def save_posted(posted):
     POSTED_LOG.write_text(json.dumps(sorted(posted)))
 
 
-def fetch_recent_from_binance(last_ts):
-    """Fetch any bars after last_ts from Binance and return as DataFrame."""
-    start_ms = int(last_ts.timestamp() * 1000) + 60_000
+def fetch_daily_klines():
+    """Fetch daily BTCUSDT klines for full history from Binance. ~2 API calls."""
+    all_bars = []
+    cursor_ms = HISTORY_START_MS
     end_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
-    if start_ms >= end_ms:
-        return pd.DataFrame()
+
+    while cursor_ms < end_ms:
+        params = {
+            "symbol": "BTCUSDT", "interval": "1d",
+            "startTime": cursor_ms, "endTime": end_ms, "limit": 1000,
+        }
+        resp = requests.get(BINANCE_URL, params=params, timeout=30)
+        resp.raise_for_status()
+        raw = resp.json()
+        if not raw:
+            break
+        all_bars.extend(raw)
+        cursor_ms = raw[-1][0] + 86_400_000  # next day
+        if len(raw) < 1000:
+            break
+        time.sleep(0.6)
+
+    cols = ["open_time", "open", "high", "low", "close", "volume",
+            "close_time", "quote_volume", "num_trades",
+            "taker_buy_vol", "taker_buy_quote_vol", "ignore"]
+    df = pd.DataFrame(all_bars, columns=cols)
+    df["open_time"] = pd.to_datetime(df["open_time"], unit="ms", utc=True)
+    for c in ["open", "high", "low", "close", "volume", "taker_buy_vol"]:
+        df[c] = df[c].astype(float)
+    df["date_utc"] = df["open_time"].dt.date.astype(str)
+    df["buy_vol"] = df["taker_buy_vol"]
+    df["sell_vol"] = df["volume"] - df["taker_buy_vol"]
+    df["roll_ret"] = df["close"].pct_change(30) * 100
+    return df
+
+
+def fetch_minute_klines(date_str):
+    """Fetch 1-minute BTCUSDT klines for a single UTC day. ~2 API calls."""
+    day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    start_ms = int(day_start.timestamp() * 1000)
+    end_ms = start_ms + 86_400_000 - 1  # end of day
 
     all_bars = []
     cursor_ms = start_ms
@@ -58,55 +97,30 @@ def fetch_recent_from_binance(last_ts):
             break
         time.sleep(0.6)
 
-    if not all_bars:
-        return pd.DataFrame()
-
     cols = ["open_time", "open", "high", "low", "close", "volume",
             "close_time", "quote_volume", "num_trades",
             "taker_buy_vol", "taker_buy_quote_vol", "ignore"]
-    new = pd.DataFrame(all_bars, columns=cols)
-    new["open_time"] = pd.to_datetime(new["open_time"], unit="ms", utc=True)
-    new["close_time"] = pd.to_datetime(new["close_time"], unit="ms", utc=True)
-    for c in ["open", "high", "low", "close", "volume", "quote_volume",
-              "taker_buy_vol", "taker_buy_quote_vol"]:
-        new[c] = new[c].astype(float)
-    new["num_trades"] = new["num_trades"].astype(int)
-    new.drop(columns=["ignore"], inplace=True)
-    new["buy_vol"] = new["taker_buy_vol"]
-    new["sell_vol"] = new["volume"] - new["taker_buy_vol"]
-    new["net_flow"] = new["buy_vol"] - new["sell_vol"]
-    new["bar_imbalance"] = np.where(new["volume"] > 0, new["net_flow"] / new["volume"], 0.0)
-    new["pct_return"] = (new["close"] / new["open"] - 1) * 100
-    new["avg_trade_size"] = np.where(new["num_trades"] > 0, new["volume"] / new["num_trades"], 0.0)
-    new["date_utc"] = new["open_time"].dt.date.astype(str)
-    return new
+    df = pd.DataFrame(all_bars, columns=cols)
+    df["open_time"] = pd.to_datetime(df["open_time"], unit="ms", utc=True)
+    for c in ["open", "high", "low", "close", "volume", "taker_buy_vol"]:
+        df[c] = df[c].astype(float)
+    df["num_trades"] = df["num_trades"].astype(int)
+    df.drop(columns=["ignore", "close_time", "quote_volume", "taker_buy_quote_vol"], inplace=True)
+    df["buy_vol"] = df["taker_buy_vol"]
+    df["sell_vol"] = df["volume"] - df["taker_buy_vol"]
+    df["net_flow"] = df["buy_vol"] - df["sell_vol"]
+    df["date_utc"] = df["open_time"].dt.date.astype(str)
+    return df
 
 
-# ── Load data + fetch fresh bars from Binance ──
-df = pd.read_parquet(DATA_PATH)
-df["open_time"] = pd.to_datetime(df["open_time"], utc=True)
+# ── Fetch daily data from Binance ──
+print("Fetching daily klines from Binance...")
+daily = fetch_daily_klines()
+print(f"  {len(daily)} daily bars, {daily['date_utc'].iloc[0]} → {daily['date_utc'].iloc[-1]}")
 
-last_ts = df["open_time"].max()
-print(f"Parquet ends at {last_ts}. Fetching new data from Binance...")
-fresh = fetch_recent_from_binance(last_ts)
-if len(fresh) > 0:
-    df = pd.concat([df, fresh], ignore_index=True)
-    df.drop_duplicates(subset=["open_time"], keep="last", inplace=True)
-    df.sort_values("open_time", inplace=True)
-    df.reset_index(drop=True, inplace=True)
-    print(f"  Added {len(fresh)} bars. Now {len(df)} total, through {df['open_time'].max()}")
-else:
-    print("  Already up to date.")
-
-daily = df.groupby("date_utc").agg(
-    open=("open", "first"), close=("close", "last"),
-    high=("high", "max"), low=("low", "min"),
-    volume=("volume", "sum"), buy_vol=("buy_vol", "sum"),
-    sell_vol=("sell_vol", "sum"),
-).reset_index()
-daily["date"] = pd.to_datetime(daily["date_utc"])
-daily = daily.sort_values("date").reset_index(drop=True)
-daily["roll_ret"] = daily["close"].pct_change(30) * 100
+# Exclude today (incomplete day)
+today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+daily = daily[daily["date_utc"] != today_str].reset_index(drop=True)
 
 def assign_regimes(daily, threshold=10, min_hold=14):
     regimes = ["CHOP"] * len(daily)
@@ -143,7 +157,10 @@ row = available.sample(1).iloc[0]
 chosen_date = row["date_utc"]
 regime = row["regime"]
 
-day = df[df["date_utc"] == chosen_date].copy().sort_values("open_time").reset_index(drop=True)
+# ── Fetch minute data for chosen day ──
+print(f"Fetching minute bars for {chosen_date}...")
+day = fetch_minute_klines(chosen_date)
+print(f"  {len(day)} minute bars")
 
 # ── Compute stats ──
 open_px = day["open"].iloc[0]
@@ -312,7 +329,6 @@ ax1.text(0.02, 0.95, f"30d: {regime}", transform=ax1.transAxes, fontsize=11, fon
 
 # Session shading using actual times
 day_start = times.iloc[0].normalize()
-from pandas import Timestamp
 import pytz
 utc = pytz.UTC
 
