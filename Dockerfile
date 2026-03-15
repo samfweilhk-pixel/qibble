@@ -14,15 +14,12 @@ COPY backend/requirements.txt ./backend/
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 COPY backend/ ./backend/
-COPY ingest_btc.py ./
 COPY --from=frontend-build /app/frontend/dist ./static/
 
-# Download seed parquet from GitHub Release (free, no LFS)
-# then run incremental ingest to catch up to today
+# Download seed parquet from GitHub Release (catch-up happens at runtime)
 RUN mkdir -p data && \
     curl -L -o data/btc_1m.parquet \
-    https://github.com/samfweilhk-pixel/qibble/releases/download/v1.0-data/btc_1m.parquet && \
-    python ingest_btc.py
+    https://github.com/samfweilhk-pixel/qibble/releases/download/v1.0-data/btc_1m.parquet
 
 ENV DATA_PATH=/app/data/btc_1m.parquet
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10000"]
