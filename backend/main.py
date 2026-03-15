@@ -24,7 +24,6 @@ log = logging.getLogger("qibble-sync")
 data_lock = threading.Lock()
 
 BINANCE_URL = "https://data-api.binance.vision/api/v3/klines"
-SYNC_INTERVAL_S = 6 * 3600  # 6 hours
 
 app = FastAPI(title="Qibble BTC Dashboard")
 
@@ -47,13 +46,56 @@ DATA_PATH = os.environ.get(
     "DATA_PATH",
     os.path.join(os.path.dirname(__file__), "..", "data", "btc_1m.parquet"),
 )
-WINDOW_DAYS = 4 * 365  # 4-year rolling window
-
+# ── Load Data + catch up from Binance ────────────────────────────────────
 print(f"Loading data from {DATA_PATH}...")
 df = pd.read_parquet(DATA_PATH)
-# Trim to 4-year window on load
-cutoff = df["open_time"].max() - pd.Timedelta(days=WINDOW_DAYS)
-df = df[df["open_time"] >= cutoff].reset_index(drop=True)
+
+# Fetch any missing bars from Binance and append directly to df
+last_ts = df["open_time"].max()
+print(f"Catching up from {last_ts}...")
+_catchup_bars = []
+_cursor_ms = int(last_ts.timestamp() * 1000) + 60_000
+while True:
+    _params = {"symbol": "BTCUSDT", "interval": "1m", "startTime": _cursor_ms, "limit": 1000}
+    _resp = requests.get(BINANCE_URL, params=_params, timeout=30)
+    _resp.raise_for_status()
+    _raw = _resp.json()
+    if not _raw:
+        break
+    _catchup_bars.extend(_raw)
+    _cursor_ms = _raw[-1][0] + 60_000
+    if len(_raw) < 1000:
+        break
+    time_module.sleep(0.6)
+
+if _catchup_bars:
+    _cols = ["open_time", "open", "high", "low", "close", "volume",
+             "close_time", "quote_volume", "num_trades",
+             "taker_buy_vol", "taker_buy_quote_vol", "ignore"]
+    _new = pd.DataFrame(_catchup_bars, columns=_cols)
+    _new["open_time"] = pd.to_datetime(_new["open_time"], unit="ms", utc=True)
+    _new["close_time"] = pd.to_datetime(_new["close_time"], unit="ms", utc=True)
+    for _c in ["open", "high", "low", "close", "volume", "quote_volume",
+               "taker_buy_vol", "taker_buy_quote_vol"]:
+        _new[_c] = _new[_c].astype(float)
+    _new["num_trades"] = _new["num_trades"].astype(int)
+    _new.drop(columns=["ignore"], inplace=True)
+    _new["buy_vol"] = _new["taker_buy_vol"]
+    _new["sell_vol"] = _new["volume"] - _new["taker_buy_vol"]
+    _new["net_flow"] = _new["buy_vol"] - _new["sell_vol"]
+    _new["bar_imbalance"] = np.where(_new["volume"] > 0, _new["net_flow"] / _new["volume"], 0.0)
+    _new["pct_return"] = (_new["close"] / _new["open"] - 1) * 100
+    _new["avg_trade_size"] = np.where(_new["num_trades"] > 0, _new["volume"] / _new["num_trades"], 0.0)
+    _new["date_utc"] = _new["open_time"].dt.date.astype(str)
+    df = pd.concat([df, _new], ignore_index=True)
+    df.drop_duplicates(subset=["open_time"], keep="last", inplace=True)
+    df.sort_values("open_time", inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    print(f"  Caught up: {len(_catchup_bars)} new bars")
+    del _new, _catchup_bars
+else:
+    print("  Already up to date")
+
 df["time"] = df["open_time"].dt.strftime("%H:%M")
 df["date_str"] = df["date_utc"]  # already string
 print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
@@ -732,159 +774,7 @@ REGIME_DAILY = _build_regime_daily()
 print("All pre-computations complete!")
 
 
-# ── Background Data Sync ────────────────────────────────────────────────
-
-def _fetch_klines_batch(start_ms):
-    """Fetch up to 1000 1-min klines from Binance starting at start_ms."""
-    params = {
-        "symbol": "BTCUSDT", "interval": "1m",
-        "startTime": start_ms, "limit": 1000,
-    }
-    resp = requests.get(BINANCE_URL, params=params, timeout=30)
-    resp.raise_for_status()
-    return resp.json()
-
-
-def _raw_to_df(raw_bars):
-    """Convert raw Binance kline arrays to a typed DataFrame with derived columns."""
-    cols = ["open_time", "open", "high", "low", "close", "volume",
-            "close_time", "quote_volume", "num_trades",
-            "taker_buy_vol", "taker_buy_quote_vol", "ignore"]
-    new = pd.DataFrame(raw_bars, columns=cols)
-    new["open_time"] = pd.to_datetime(new["open_time"], unit="ms", utc=True)
-    new["close_time"] = pd.to_datetime(new["close_time"], unit="ms", utc=True)
-    for c in ["open", "high", "low", "close", "volume", "quote_volume",
-              "taker_buy_vol", "taker_buy_quote_vol"]:
-        new[c] = new[c].astype(float)
-    new["num_trades"] = new["num_trades"].astype(int)
-    new.drop(columns=["ignore"], inplace=True)
-    new["buy_vol"] = new["taker_buy_vol"]
-    new["sell_vol"] = new["volume"] - new["taker_buy_vol"]
-    new["net_flow"] = new["buy_vol"] - new["sell_vol"]
-    new["bar_imbalance"] = np.where(new["volume"] > 0, new["net_flow"] / new["volume"], 0.0)
-    new["pct_return"] = (new["close"] / new["open"] - 1) * 100
-    new["avg_trade_size"] = np.where(new["num_trades"] > 0, new["volume"] / new["num_trades"], 0.0)
-    new["date_utc"] = new["open_time"].dt.date.astype(str)
-    new["time"] = new["open_time"].dt.strftime("%H:%M")
-    new["date_str"] = new["date_utc"]
-    return new
-
-
-def _sync_once():
-    """Fetch new bars from Binance, append to df, recompute all analytics."""
-    global df, DAILY_AGG, REGIMES
-    global INTRADAY_CORR, LEAD_LAG, FLOW_EXTREMES, CORR_DIVERGENCE
-    global FLOW_TOD, SESSION_PERF, SESSION_FLOW_FWD, WHALE_ACTIVITY
-    global FLOW_PERSISTENCE, FLOW_CLASSIFICATION, VOLUME_TREND, REGIME_DAILY
-
-    last_ts = df["open_time"].max()
-    start_ms = int(last_ts.timestamp() * 1000) + 60_000
-    log.info(f"Sync: fetching bars since {last_ts}...")
-
-    all_bars = []
-    cursor_ms = start_ms
-    while True:
-        raw = _fetch_klines_batch(cursor_ms)
-        if not raw:
-            break
-        all_bars.extend(raw)
-        cursor_ms = raw[-1][0] + 60_000
-        if len(raw) < 1000:
-            break
-        time_module.sleep(0.6)
-
-    if not all_bars:
-        log.info("Sync: no new bars")
-        return
-
-    import gc
-
-    new_df = _raw_to_df(all_bars)
-    log.info(f"Sync: fetched {len(new_df)} new bars")
-
-    # Append new bars, drop duplicates
-    existing_times = set(df["open_time"])
-    new_df = new_df[~new_df["open_time"].isin(existing_times)]
-    if len(new_df) == 0:
-        log.info("Sync: all fetched bars already present")
-        return
-    df = pd.concat([df, new_df], ignore_index=True)
-    df.sort_values("open_time", inplace=True)
-
-    # Trim oldest bars to keep 5-year rolling window (constant memory)
-    cutoff = df["open_time"].max() - pd.Timedelta(days=WINDOW_DAYS)
-    df = df[df["open_time"] >= cutoff].reset_index(drop=True)
-    del new_df, existing_times
-    gc.collect()
-
-    log.info(f"Sync: {len(df)} bars after trim, {df['date_str'].nunique()} days")
-
-    # Save to disk
-    try:
-        df.to_parquet(DATA_PATH, index=False)
-        log.info(f"Sync: saved to {DATA_PATH}")
-    except Exception as e:
-        log.warning(f"Sync: failed to save parquet: {e}")
-
-    # Delete old analytics, then recompute fresh (no doubling)
-    log.info("Sync: recomputing analytics...")
-
-    REGIMES.clear()
-    gc.collect()
-    new_regimes = _detect_regimes()
-    with data_lock:
-        REGIMES.update(new_regimes)
-    del new_regimes
-    df["regime"] = df["date_str"].map(REGIMES["map"]).fillna("CHOP")
-    gc.collect()
-
-    for target_name, builder in [
-        ("DAILY_AGG", _build_daily_agg),
-        ("INTRADAY_CORR", _build_intraday_corr),
-        ("LEAD_LAG", _build_lead_lag),
-        ("FLOW_EXTREMES", _build_flow_extremes),
-        ("CORR_DIVERGENCE", _build_corr_divergence),
-        ("FLOW_TOD", _build_flow_tod),
-        ("SESSION_PERF", _build_session_performance),
-        ("SESSION_FLOW_FWD", _build_session_flow_fwd),
-        ("WHALE_ACTIVITY", _build_whale_activity),
-        ("FLOW_PERSISTENCE", _build_flow_persistence),
-        ("FLOW_CLASSIFICATION", _build_flow_classification),
-        ("VOLUME_TREND", _build_volume_trend),
-        ("REGIME_DAILY", _build_regime_daily),
-    ]:
-        # Delete old, compute new, swap in
-        globals()[target_name] = None
-        gc.collect()
-        result = builder()
-        with data_lock:
-            globals()[target_name] = result
-        del result
-        gc.collect()
-
-    log.info(f"Sync: complete. {len(df)} total bars, {df['date_str'].nunique()} days")
-
-
-def _sync_loop():
-    """Background loop: sync immediately on startup, then every SYNC_INTERVAL_S."""
-    # Wait for startup to finish, then sync (catch up from seed parquet)
-    time_module.sleep(60)
-    try:
-        _sync_once()
-    except Exception as e:
-        log.error(f"Initial sync failed: {e}")
-    while True:
-        time_module.sleep(SYNC_INTERVAL_S)
-        try:
-            _sync_once()
-        except Exception as e:
-            log.error(f"Sync failed: {e}")
-
-
-# Start background sync thread
-_sync_thread = threading.Thread(target=_sync_loop, daemon=True)
-_sync_thread.start()
-log.info(f"Background sync started (every {SYNC_INTERVAL_S // 3600}h)")
+# No background sync — data is caught up before loading via _catchup_parquet()
 
 
 # ── API Endpoints ───────────────────────────────────────────────────────
