@@ -49,9 +49,12 @@ DATA_PATH = os.environ.get(
 )
 print(f"Loading data from {DATA_PATH}...")
 df = pd.read_parquet(DATA_PATH)
+# Keep only last 1 year to fit in 2GB RAM (30-day rolling is longest lookback)
+cutoff = df["open_time"].max() - pd.Timedelta(days=365)
+df = df[df["open_time"] >= cutoff].reset_index(drop=True)
 df["time"] = df["open_time"].dt.strftime("%H:%M")
 df["date_str"] = df["date_utc"]  # already string
-print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
+print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days (1-year window)")
 
 
 # ── Regime Detection ────────────────────────────────────────────────────
