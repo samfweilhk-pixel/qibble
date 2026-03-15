@@ -812,40 +812,35 @@ def _sync_once():
     except Exception as e:
         log.warning(f"Sync: failed to save parquet: {e}")
 
+    # Recompute analytics one at a time to avoid doubling memory
+    import gc
     log.info("Sync: recomputing all analytics...")
-    new_regimes = _detect_regimes()
-    df["regime"] = df["date_str"].map(new_regimes["map"]).fillna("CHOP")
 
-    new_daily_agg = _build_daily_agg()
-    new_intraday_corr = _build_intraday_corr()
-    new_lead_lag = _build_lead_lag()
-    new_flow_extremes = _build_flow_extremes()
-    new_corr_div = _build_corr_divergence()
-    new_flow_tod = _build_flow_tod()
-    new_session_perf = _build_session_performance()
-    new_session_flow = _build_session_flow_fwd()
-    new_whale = _build_whale_activity()
-    new_persistence = _build_flow_persistence()
-    new_classification = _build_flow_classification()
-    new_volume = _build_volume_trend()
-    new_regime_daily = _build_regime_daily()
-
-    # Atomic swap under lock
     with data_lock:
-        REGIMES = new_regimes
-        DAILY_AGG = new_daily_agg
-        INTRADAY_CORR = new_intraday_corr
-        LEAD_LAG = new_lead_lag
-        FLOW_EXTREMES = new_flow_extremes
-        CORR_DIVERGENCE = new_corr_div
-        FLOW_TOD = new_flow_tod
-        SESSION_PERF = new_session_perf
-        SESSION_FLOW_FWD = new_session_flow
-        WHALE_ACTIVITY = new_whale
-        FLOW_PERSISTENCE = new_persistence
-        FLOW_CLASSIFICATION = new_classification
-        VOLUME_TREND = new_volume
-        REGIME_DAILY = new_regime_daily
+        REGIMES.update(_detect_regimes())
+    df["regime"] = df["date_str"].map(REGIMES["map"]).fillna("CHOP")
+    gc.collect()
+
+    for name, builder, target_name in [
+        ("daily_agg", _build_daily_agg, "DAILY_AGG"),
+        ("intraday_corr", _build_intraday_corr, "INTRADAY_CORR"),
+        ("lead_lag", _build_lead_lag, "LEAD_LAG"),
+        ("flow_extremes", _build_flow_extremes, "FLOW_EXTREMES"),
+        ("corr_divergence", _build_corr_divergence, "CORR_DIVERGENCE"),
+        ("flow_tod", _build_flow_tod, "FLOW_TOD"),
+        ("session_perf", _build_session_performance, "SESSION_PERF"),
+        ("session_flow_fwd", _build_session_flow_fwd, "SESSION_FLOW_FWD"),
+        ("whale_activity", _build_whale_activity, "WHALE_ACTIVITY"),
+        ("flow_persistence", _build_flow_persistence, "FLOW_PERSISTENCE"),
+        ("flow_classification", _build_flow_classification, "FLOW_CLASSIFICATION"),
+        ("volume_trend", _build_volume_trend, "VOLUME_TREND"),
+        ("regime_daily", _build_regime_daily, "REGIME_DAILY"),
+    ]:
+        result = builder()
+        with data_lock:
+            globals()[target_name] = result
+        del result
+        gc.collect()
 
     log.info(f"Sync: complete. {len(df)} total bars, {df['date_str'].nunique()} days")
 
