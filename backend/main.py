@@ -795,21 +795,22 @@ def _sync_once():
     new_df = _raw_to_df(all_bars)
     log.info(f"Sync: fetched {len(new_df)} new bars")
 
-    # Merge
-    merged = pd.concat([df, new_df], ignore_index=True)
-    merged.drop_duplicates(subset=["open_time"], keep="last", inplace=True)
-    merged.sort_values("open_time", inplace=True)
-    merged.reset_index(drop=True, inplace=True)
+    # Append in-place to avoid doubling memory
+    existing_times = set(df["open_time"])
+    new_df = new_df[~new_df["open_time"].isin(existing_times)]
+    if len(new_df) == 0:
+        log.info("Sync: all fetched bars already present")
+        return
+    df = pd.concat([df, new_df], ignore_index=True)
+    df.sort_values("open_time", inplace=True)
+    df.reset_index(drop=True, inplace=True)
 
     # Save to disk (survives container restarts within same deployment)
     try:
-        merged.to_parquet(DATA_PATH, index=False)
-        log.info(f"Sync: saved {len(merged)} bars to {DATA_PATH}")
+        df.to_parquet(DATA_PATH, index=False)
+        log.info(f"Sync: saved {len(df)} bars to {DATA_PATH}")
     except Exception as e:
         log.warning(f"Sync: failed to save parquet: {e}")
-
-    # Swap df and recompute
-    df = merged
 
     log.info("Sync: recomputing all analytics...")
     new_regimes = _detect_regimes()
@@ -851,7 +852,8 @@ def _sync_once():
 
 def _sync_loop():
     """Background loop: sync immediately on startup, then every SYNC_INTERVAL_S."""
-    # Sync immediately on startup (catch up from seed parquet)
+    # Wait for startup to finish, then sync (catch up from seed parquet)
+    time_module.sleep(60)
     try:
         _sync_once()
     except Exception as e:
