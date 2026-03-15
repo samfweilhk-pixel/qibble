@@ -850,7 +850,12 @@ def _sync_once():
 
 
 def _sync_loop():
-    """Background loop: sync every SYNC_INTERVAL_S seconds."""
+    """Background loop: sync immediately on startup, then every SYNC_INTERVAL_S."""
+    # Sync immediately on startup (catch up from seed parquet)
+    try:
+        _sync_once()
+    except Exception as e:
+        log.error(f"Initial sync failed: {e}")
     while True:
         time_module.sleep(SYNC_INTERVAL_S)
         try:
