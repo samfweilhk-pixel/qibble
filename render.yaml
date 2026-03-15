@@ -4,3 +4,6 @@ services:
     runtime: docker
     plan: starter
     healthCheckPath: /health
+    buildFilter:
+      ignoredPaths:
+        - x-posting/**
