@@ -47,14 +47,13 @@ DATA_PATH = os.environ.get(
     "DATA_PATH",
     os.path.join(os.path.dirname(__file__), "..", "data", "btc_1m.parquet"),
 )
+WINDOW_DAYS = 5 * 365  # 5-year rolling window
+
 print(f"Loading data from {DATA_PATH}...")
 df = pd.read_parquet(DATA_PATH)
-# Keep only last 1 year to fit in 2GB RAM (30-day rolling is longest lookback)
-cutoff = df["open_time"].max() - pd.Timedelta(days=365)
-df = df[df["open_time"] >= cutoff].reset_index(drop=True)
 df["time"] = df["open_time"].dt.strftime("%H:%M")
 df["date_str"] = df["date_utc"]  # already string
-print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days (1-year window)")
+print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
 
 
 # ── Regime Detection ────────────────────────────────────────────────────
@@ -795,10 +794,12 @@ def _sync_once():
         log.info("Sync: no new bars")
         return
 
+    import gc
+
     new_df = _raw_to_df(all_bars)
     log.info(f"Sync: fetched {len(new_df)} new bars")
 
-    # Append in-place to avoid doubling memory
+    # Append new bars, drop duplicates
     existing_times = set(df["open_time"])
     new_df = new_df[~new_df["open_time"].isin(existing_times)]
     if len(new_df) == 0:
@@ -806,39 +807,52 @@ def _sync_once():
         return
     df = pd.concat([df, new_df], ignore_index=True)
     df.sort_values("open_time", inplace=True)
-    df.reset_index(drop=True, inplace=True)
 
-    # Save to disk (survives container restarts within same deployment)
+    # Trim oldest bars to keep 5-year rolling window (constant memory)
+    cutoff = df["open_time"].max() - pd.Timedelta(days=WINDOW_DAYS)
+    df = df[df["open_time"] >= cutoff].reset_index(drop=True)
+    del new_df, existing_times
+    gc.collect()
+
+    log.info(f"Sync: {len(df)} bars after trim, {df['date_str'].nunique()} days")
+
+    # Save to disk
     try:
         df.to_parquet(DATA_PATH, index=False)
-        log.info(f"Sync: saved {len(df)} bars to {DATA_PATH}")
+        log.info(f"Sync: saved to {DATA_PATH}")
     except Exception as e:
         log.warning(f"Sync: failed to save parquet: {e}")
 
-    # Recompute analytics one at a time to avoid doubling memory
-    import gc
-    log.info("Sync: recomputing all analytics...")
+    # Delete old analytics, then recompute fresh (no doubling)
+    log.info("Sync: recomputing analytics...")
 
+    REGIMES.clear()
+    gc.collect()
+    new_regimes = _detect_regimes()
     with data_lock:
-        REGIMES.update(_detect_regimes())
+        REGIMES.update(new_regimes)
+    del new_regimes
     df["regime"] = df["date_str"].map(REGIMES["map"]).fillna("CHOP")
     gc.collect()
 
-    for name, builder, target_name in [
-        ("daily_agg", _build_daily_agg, "DAILY_AGG"),
-        ("intraday_corr", _build_intraday_corr, "INTRADAY_CORR"),
-        ("lead_lag", _build_lead_lag, "LEAD_LAG"),
-        ("flow_extremes", _build_flow_extremes, "FLOW_EXTREMES"),
-        ("corr_divergence", _build_corr_divergence, "CORR_DIVERGENCE"),
-        ("flow_tod", _build_flow_tod, "FLOW_TOD"),
-        ("session_perf", _build_session_performance, "SESSION_PERF"),
-        ("session_flow_fwd", _build_session_flow_fwd, "SESSION_FLOW_FWD"),
-        ("whale_activity", _build_whale_activity, "WHALE_ACTIVITY"),
-        ("flow_persistence", _build_flow_persistence, "FLOW_PERSISTENCE"),
-        ("flow_classification", _build_flow_classification, "FLOW_CLASSIFICATION"),
-        ("volume_trend", _build_volume_trend, "VOLUME_TREND"),
-        ("regime_daily", _build_regime_daily, "REGIME_DAILY"),
+    for target_name, builder in [
+        ("DAILY_AGG", _build_daily_agg),
+        ("INTRADAY_CORR", _build_intraday_corr),
+        ("LEAD_LAG", _build_lead_lag),
+        ("FLOW_EXTREMES", _build_flow_extremes),
+        ("CORR_DIVERGENCE", _build_corr_divergence),
+        ("FLOW_TOD", _build_flow_tod),
+        ("SESSION_PERF", _build_session_performance),
+        ("SESSION_FLOW_FWD", _build_session_flow_fwd),
+        ("WHALE_ACTIVITY", _build_whale_activity),
+        ("FLOW_PERSISTENCE", _build_flow_persistence),
+        ("FLOW_CLASSIFICATION", _build_flow_classification),
+        ("VOLUME_TREND", _build_volume_trend),
+        ("REGIME_DAILY", _build_regime_daily),
     ]:
+        # Delete old, compute new, swap in
+        globals()[target_name] = None
+        gc.collect()
         result = builder()
         with data_lock:
             globals()[target_name] = result
