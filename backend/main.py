@@ -47,10 +47,13 @@ DATA_PATH = os.environ.get(
     "DATA_PATH",
     os.path.join(os.path.dirname(__file__), "..", "data", "btc_1m.parquet"),
 )
-WINDOW_DAYS = 5 * 365  # 5-year rolling window
+WINDOW_DAYS = 4 * 365  # 4-year rolling window
 
 print(f"Loading data from {DATA_PATH}...")
 df = pd.read_parquet(DATA_PATH)
+# Trim to 4-year window on load
+cutoff = df["open_time"].max() - pd.Timedelta(days=WINDOW_DAYS)
+df = df[df["open_time"] >= cutoff].reset_index(drop=True)
 df["time"] = df["open_time"].dt.strftime("%H:%M")
 df["date_str"] = df["date_utc"]  # already string
 print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
