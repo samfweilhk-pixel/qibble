@@ -47,12 +47,11 @@ DATA_PATH = os.environ.get(
     "DATA_PATH",
     os.path.join(os.path.dirname(__file__), "..", "data", "btc_1m.parquet"),
 )
-ROLLING_WINDOW_DAYS = 365 * 5  # 5-year rolling window
-
-# Filter at read time via pyarrow — full dataset never enters pandas memory
-_cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=ROLLING_WINDOW_DAYS)
-print(f"Loading data from {DATA_PATH} (5-year window from {_cutoff.date()})...")
-df = pd.read_parquet(DATA_PATH, filters=[("open_time", ">=", _cutoff)])
+print(f"Loading data from {DATA_PATH}...")
+df = pd.read_parquet(DATA_PATH)
+# Downcast float64 → float32 to save ~150-200MB RAM
+for col in df.select_dtypes(include=["float64"]).columns:
+    df[col] = df[col].astype(np.float32)
 df["time"] = df["open_time"].dt.strftime("%H:%M")
 df["date_str"] = df["date_utc"]  # already string
 print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
