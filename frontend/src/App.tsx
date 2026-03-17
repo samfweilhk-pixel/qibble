@@ -85,6 +85,12 @@ export default function App() {
               )}
             </button>
           ))}
+          <a
+            href="/btc-flow/"
+            className="relative px-3 md:px-5 py-2.5 text-xs tracking-wide transition-all whitespace-nowrap text-gray-500 hover:text-gray-300"
+          >
+            <span className="font-semibold uppercase">Analysis</span>
+          </a>
         </nav>
       </header>
 
