@@ -47,11 +47,20 @@ DATA_PATH = os.environ.get(
     "DATA_PATH",
     os.path.join(os.path.dirname(__file__), "..", "data", "btc_1m.parquet"),
 )
+ROLLING_WINDOW_DAYS = 365 * 5  # 5-year rolling window
+
 print(f"Loading data from {DATA_PATH}...")
 df = pd.read_parquet(DATA_PATH)
 df["time"] = df["open_time"].dt.strftime("%H:%M")
 df["date_str"] = df["date_utc"]  # already string
 print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
+
+# Trim to 5-year rolling window to prevent OOM as data grows
+cutoff = df["open_time"].max() - pd.Timedelta(days=ROLLING_WINDOW_DAYS)
+before = len(df)
+df = df[df["open_time"] >= cutoff].reset_index(drop=True)
+if len(df) < before:
+    print(f"  Trimmed to {ROLLING_WINDOW_DAYS}-day window: {before:,} → {len(df):,} bars, {df['date_str'].nunique()} days")
 
 
 # ── Regime Detection ────────────────────────────────────────────────────
@@ -1032,6 +1041,46 @@ def get_flow_classification():
 def get_volume_trend():
     """Rolling 30-day avg daily volume + price overlay."""
     return VOLUME_TREND
+
+
+# ── Blog Static Files ──────────────────────────────────────────────────
+
+BLOG_DIR = os.path.join(os.path.dirname(__file__), "..", "blog-static")
+
+
+@app.get("/btc-flow/{path:path}")
+def serve_blog(path: str):
+    """Serve pre-generated blog pages from blog-static/btc-flow/."""
+    if not os.path.exists(BLOG_DIR):
+        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+    file_path = os.path.join(BLOG_DIR, "btc-flow", path)
+    # /btc-flow/2024-01-01/ → blog-static/btc-flow/2024-01-01/index.html
+    if os.path.isdir(file_path):
+        index = os.path.join(file_path, "index.html")
+        if os.path.isfile(index):
+            return FileResponse(index, media_type="text/html")
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+
+@app.get("/sitemap.xml")
+def serve_sitemap():
+    """Serve sitemap.xml from blog-static/."""
+    sitemap = os.path.join(BLOG_DIR, "sitemap.xml")
+    if os.path.isfile(sitemap):
+        return FileResponse(sitemap, media_type="application/xml")
+    return {"error": "not found"}
+
+
+@app.get("/robots.txt")
+def serve_robots():
+    """Serve robots.txt from blog-static/."""
+    robots = os.path.join(BLOG_DIR, "robots.txt")
+    if os.path.isfile(robots):
+        return FileResponse(robots, media_type="text/plain")
+    return FileResponse(robots, media_type="text/plain")
 
 
 # ── Static Files (Frontend) ────────────────────────────────────────────

@@ -1,0 +1,89 @@
+name: Generate Blog Pages
+
+on:
+  workflow_dispatch: # Manual trigger
+    inputs:
+      mode:
+        description: "Generation mode"
+        required: true
+        default: "phase1"
+        type: choice
+        options:
+          - phase1     # ~200-400 pages (4+ patterns — crashes, whales, divergences)
+          - phase2     # ~600-800 pages (3+ patterns)
+          - all        # All ~1,840 pages
+          - yesterday  # Generate just yesterday's page
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pandas numpy matplotlib pytz jinja2 pyarrow requests
+
+      - name: Download parquet from Release
+        run: |
+          mkdir -p data
+          curl -L -o data/btc_1m.parquet \
+            https://github.com/${{ github.repository }}/releases/download/v1.0-data/btc_1m.parquet
+
+      - name: Generate blog pages
+        run: |
+          MODE="${{ inputs.mode }}"
+          case "$MODE" in
+            yesterday)
+              YESTERDAY=$(date -u -d "yesterday" +%Y-%m-%d 2>/dev/null || date -u -v-1d +%Y-%m-%d)
+              echo "Generating page for $YESTERDAY"
+              python blog/generate_daily.py --parquet data/btc_1m.parquet "$YESTERDAY"
+              ;;
+            phase1)
+              echo "Phase 1: days with 4+ patterns"
+              python blog/generate_daily.py --parquet data/btc_1m.parquet --phase1
+              ;;
+            phase2)
+              echo "Phase 2: days with 3+ patterns"
+              python blog/generate_daily.py --parquet data/btc_1m.parquet --phase2
+              ;;
+            all)
+              echo "Generating ALL pages"
+              python blog/generate_daily.py --parquet data/btc_1m.parquet --all
+              ;;
+          esac
+
+      - name: Package blog-static
+        run: |
+          cd blog-static
+          tar czf ../blog-static.tar.gz .
+          cd ..
+          echo "Archive size: $(du -sh blog-static.tar.gz | cut -f1)"
+          echo "Total files: $(find blog-static -type f | wc -l)"
+
+      - name: Upload as GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create or update the v1.0-blog release
+          if gh release view v1.0-blog &>/dev/null; then
+            echo "Updating existing release..."
+            gh release upload v1.0-blog blog-static.tar.gz --clobber
+          else
+            echo "Creating new release..."
+            gh release create v1.0-blog blog-static.tar.gz \
+              --title "Blog Static Pages" \
+              --notes "Pre-generated blog pages for qibble.io/btc-flow/. $(find blog-static -type d -name '20*' | wc -l) daily pages."
+          fi

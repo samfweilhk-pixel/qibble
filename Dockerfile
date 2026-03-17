@@ -24,5 +24,14 @@ RUN mkdir -p data && \
     https://github.com/samfweilhk-pixel/qibble/releases/download/v1.0-data/btc_1m.parquet && \
     python ingest_btc.py
 
+# Download pre-generated blog pages from GitHub Release
+# These are static HTML + PNG files, served from disk (zero RAM overhead)
+RUN mkdir -p blog-static && \
+    curl -L -f -o /tmp/blog-static.tar.gz \
+    https://github.com/samfweilhk-pixel/qibble/releases/download/v1.0-blog/blog-static.tar.gz && \
+    tar xzf /tmp/blog-static.tar.gz -C blog-static && \
+    rm /tmp/blog-static.tar.gz || \
+    echo "No blog release found — skipping (blog pages will 404)"
+
 ENV DATA_PATH=/app/data/btc_1m.parquet
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10000"]

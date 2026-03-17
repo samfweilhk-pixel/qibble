@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | Qibble</title>
+    <meta name="description" content="{{ meta_description }}">
+    <link rel="canonical" href="https://qibble.io/btc-flow/{{ date }}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:description" content="{{ meta_description }}">
+    <meta property="og:image" content="https://qibble.io/btc-flow/{{ date }}/price_volume.png">
+    <meta property="og:url" content="https://qibble.io/btc-flow/{{ date }}">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Qibble">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@qibbler">
+    <meta name="twitter:title" content="{{ title }}">
+    <meta name="twitter:description" content="{{ meta_description }}">
+    <meta name="twitter:image" content="https://qibble.io/btc-flow/{{ date }}/price_volume.png">
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "{{ title }}",
+        "description": "{{ meta_description }}",
+        "image": "https://qibble.io/btc-flow/{{ date }}/price_volume.png",
+        "datePublished": "{{ date }}",
+        "author": {
+            "@type": "Organization",
+            "name": "Qibble",
+            "url": "https://qibble.io"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "Qibble",
+            "url": "https://qibble.io"
+        },
+        "mainEntityOfPage": "https://qibble.io/btc-flow/{{ date }}"
+    }
+    </script>
+
+    <!-- GA -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R0JQN19Z3W"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-R0JQN19Z3W');
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0f;
+            color: #e5e5e5;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        /* Nav */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid #1e1e2e;
+            margin-bottom: 32px;
+        }
+        nav a { color: #00d4ff; text-decoration: none; font-size: 13px; }
+        nav a:hover { text-decoration: underline; }
+        .nav-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #00d4ff;
+            text-decoration: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .nav-links { display: flex; gap: 20px; }
+
+        /* Header */
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        .page-header .subtitle {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Regime badge */
+        .regime-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .regime-BULL { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid #34d399; }
+        .regime-BEAR { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid #f87171; }
+        .regime-CHOP { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: rgba(17, 17, 24, 0.8);
+            border: 1px solid #1e1e2e;
+            border-radius: 8px;
+            padding: 14px;
+            backdrop-filter: blur(12px);
+        }
+        .stat-label {
+            font-size: 9px;
+            color: #7c3aed;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .stat-value.positive { color: #34d399; }
+        .stat-value.negative { color: #f87171; }
+
+        /* Content sections */
+        .content-section {
+            background: rgba(17, 17, 24, 0.8);
+            border: 1px solid #1e1e2e;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(12px);
+        }
+        .content-section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+        }
+        .content-section p {
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 12px;
+            line-height: 1.8;
+        }
+        .content-section p:last-child { margin-bottom: 0; }
+
+        /* Charts */
+        .chart-container {
+            margin-bottom: 24px;
+        }
+        .chart-container img {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #1e1e2e;
+        }
+        .chart-caption {
+            font-size: 10px;
+            color: #666;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        /* Session table */
+        .session-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        .session-table th {
+            text-align: left;
+            color: #7c3aed;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 12px;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .session-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #1e1e2e;
+            color: #ccc;
+        }
+
+        /* Prev/Next nav */
+        .page-nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-top: 1px solid #1e1e2e;
+            margin-top: 32px;
+        }
+        .page-nav a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .page-nav a:hover { text-decoration: underline; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 32px 0;
+            border-top: 1px solid #1e1e2e;
+            margin-top: 16px;
+        }
+        footer p {
+            font-size: 11px;
+            color: #555;
+        }
+        footer a { color: #00d4ff; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* CTA */
+        .cta-box {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .cta-box p {
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 12px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #00d4ff;
+            color: #0a0a0f;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 10px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+        .cta-button:hover { opacity: 0.9; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .page-header h1 { font-size: 18px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .container { padding: 16px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="https://qibble.io" class="nav-logo">Qibble</a>
+            <div class="nav-links">
+                <a href="https://qibble.io">Dashboard</a>
+                <a href="/btc-flow/">All Days</a>
+            </div>
+        </nav>
+
+        <div class="page-header">
+            <h1>
+                {{ title }}
+                <span class="regime-badge regime-{{ regime }}">{{ regime }}</span>
+            </h1>
+            <p class="subtitle">{{ weekday }} &middot; Minute-level BTC order flow from Binance &middot; {{ num_trades }} trades</p>
+        </div>
+
+        <!-- Key Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Open</div>
+                <div class="stat-value">{{ open }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Close</div>
+                <div class="stat-value">{{ close }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Return</div>
+                <div class="stat-value {{ return_class }}">{{ return_pct }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Net Flow</div>
+                <div class="stat-value {% if 'buying' in net_flow_direction %}positive{% else %}negative{% endif %}">{{ net_flow }} BTC</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Volume</div>
+                <div class="stat-value">{{ total_vol }} BTC</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Buy/Sell Ratio</div>
+                <div class="stat-value">{{ buy_sell_ratio }}</div>
+            </div>
+        </div>
+
+        <!-- Hook / Summary -->
+        <div class="content-section">
+            <h2>Summary</h2>
+            <p>{{ hook }}</p>
+        </div>
+
+        <!-- Chart 1: Price + Volume -->
+        <div class="chart-container">
+            <img src="price_volume.png" alt="BTC price and volume for {{ date_display }}" loading="lazy">
+            <p class="chart-caption">BTC price (blue) and trading volume (cyan bars) per minute. Session shading: Asia (gold 00-08 UTC), Europe (green 08-14), US (red 14-00).</p>
+        </div>
+
+        <!-- Flow Analysis -->
+        <div class="content-section">
+            <h2>Flow Analysis</h2>
+            {% for p in flow_paragraphs %}
+            <p>{{ p }}</p>
+            {% endfor %}
+        </div>
+
+        <!-- Chart 2: CVD vs Return -->
+        <div class="chart-container">
+            <img src="cvd_return.png" alt="Cumulative flow vs return for {{ date_display }}" loading="lazy">
+            <p class="chart-caption">Cumulative buying pressure (purple, left axis) vs cumulative price return (yellow, right axis). When these diverge, flow and price are telling different stories.</p>
+        </div>
+
+        <!-- Session Analysis -->
+        <div class="content-section">
+            <h2>Session Breakdown</h2>
+            {% for p in session_paragraphs %}
+            <p>{{ p }}</p>
+            {% endfor %}
+
+            <table class="session-table">
+                <thead>
+                    <tr>
+                        <th>Session</th>
+                        <th>Hours (UTC)</th>
+                        <th>Return</th>
+                        <th>Net Flow</th>
+                        <th>Flow Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for name, s in sessions.items() %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>{% if name == 'Asia' %}00:00 - 08:00{% elif name == 'Europe' %}08:00 - 14:00{% else %}14:00 - 00:00{% endif %}</td>
+                        <td style="color: {% if s.return > 0 %}#34d399{% elif s.return < 0 %}#f87171{% else %}#ccc{% endif %}">{{ "%.2f"|format(s.return) }}%</td>
+                        <td>{{ "%.0f"|format(s.net_flow) }} BTC</td>
+                        <td>{{ "%.0f"|format(s.flow_share * 100) }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Chart 3: Buy/Sell Volume -->
+        <div class="chart-container">
+            <img src="buy_sell_volume.png" alt="Buy vs sell volume for {{ date_display }}" loading="lazy">
+            <p class="chart-caption">Per-minute volume split by aggressor side. Green = actively bought at the asking price. Red = actively sold at the bid price.</p>
+        </div>
+
+        <!-- Regime Context -->
+        <div class="content-section">
+            <h2>Regime Context</h2>
+            {% for p in context_paragraphs %}
+            <p>{{ p }}</p>
+            {% endfor %}
+        </div>
+
+        <!-- Tags -->
+        {% if tags %}
+        <div style="margin-bottom:24px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <span style="font-size:10px;color:#7c3aed;text-transform:uppercase;letter-spacing:1px;margin-right:4px;">Patterns:</span>
+            {% for tag in tags %}
+            {% if tag not in ['net-buying', 'net-selling'] %}
+            <a href="/btc-flow/tag/{{ tag }}/" style="display:inline-block;background:#1e1e2e;color:#00d4ff;padding:3px 8px;border-radius:4px;font-size:10px;text-decoration:none;border:1px solid #2a2d3e;">{{ tag }}</a>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- CTA -->
+        <div class="cta-box">
+            <p>Explore this day's minute-level flow data interactively on the dashboard.</p>
+            <a href="https://qibble.io" class="cta-button">Open Dashboard</a>
+        </div>
+
+        <!-- Prev/Next -->
+        <div class="page-nav">
+            {% if prev_date %}
+            <a href="/btc-flow/{{ prev_date }}/">&larr; {{ prev_date }}</a>
+            {% else %}
+            <span></span>
+            {% endif %}
+            {% if next_date %}
+            <a href="/btc-flow/{{ next_date }}/">{{ next_date }} &rarr;</a>
+            {% else %}
+            <span></span>
+            {% endif %}
+        </div>
+
+        <footer>
+            <p>
+                <a href="https://qibble.io">Qibble</a> &middot;
+                Free BTC flow analytics &middot;
+                Data from <a href="https://www.binance.com" rel="nofollow">Binance</a> public API &middot;
+                <a href="https://x.com/qibbler">@qibbler</a>
+            </p>
+            <p style="margin-top: 8px;">5 years of minute-level BTC order flow data. No account required.</p>
+        </footer>
+    </div>
+</body>
+</html>

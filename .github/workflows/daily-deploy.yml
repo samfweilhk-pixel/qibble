@@ -1,0 +1,19 @@
+name: Daily Render Deploy
+
+on:
+  schedule:
+    # Once per day at 01:00 UTC — refreshes BTC data on qibble.io
+    - cron: "0 1 * * *"
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            --fail --silent --show-error
+          echo "Render deploy triggered"

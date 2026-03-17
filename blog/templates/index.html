@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Flow Analysis — {{ total_days }} Days of Order Flow Data | Qibble</title>
+    <meta name="description" content="Browse {{ total_days }} days of minute-level Bitcoin order flow analysis. Filter by regime, whale activity, flow divergence, and more. Free data from Binance.">
+    <link rel="canonical" href="https://qibble.io/btc-flow/">
+
+    <meta property="og:title" content="BTC Flow Analysis — {{ total_days }} Days of Data">
+    <meta property="og:description" content="Browse {{ total_days }} days of minute-level Bitcoin order flow analysis.">
+    <meta property="og:url" content="https://qibble.io/btc-flow/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Qibble">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@qibbler">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R0JQN19Z3W"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-R0JQN19Z3W');
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f; color: #e5e5e5;
+            font-family: 'JetBrains Mono', monospace; line-height: 1.7; min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+        nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 0; border-bottom: 1px solid #1e1e2e; margin-bottom: 32px;
+        }
+        nav a { color: #00d4ff; text-decoration: none; font-size: 13px; }
+        nav a:hover { text-decoration: underline; }
+        .nav-logo { font-size: 18px; font-weight: 700; color: #00d4ff; letter-spacing: 2px; text-transform: uppercase; }
+        .nav-links { display: flex; gap: 20px; }
+        h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .subtitle { font-size: 12px; color: #888; margin-bottom: 24px; }
+
+        /* Regime summary */
+        .regime-summary {
+            display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+        }
+        .regime-pill {
+            padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+        }
+        .regime-pill.bull { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid #34d399; }
+        .regime-pill.bear { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid #f87171; }
+        .regime-pill.chop { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+
+        /* Tags */
+        .tag-cloud {
+            background: rgba(17,17,24,0.8); border: 1px solid #1e1e2e; border-radius: 8px;
+            padding: 20px; margin-bottom: 24px;
+        }
+        .tag-cloud h2 {
+            font-size: 13px; color: #00d4ff; text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag-link {
+            display: inline-block; background: #1e1e2e; color: #00d4ff; padding: 4px 10px;
+            border-radius: 4px; font-size: 11px; text-decoration: none;
+            border: 1px solid #2a2d3e; transition: background 0.2s;
+        }
+        .tag-link:hover { background: #2a2d3e; }
+        .tag-count { color: #666; font-size: 10px; margin-left: 4px; }
+
+        /* Month groups */
+        .month-group { margin-bottom: 24px; }
+        .month-header {
+            font-size: 14px; font-weight: 600; color: #00d4ff; text-transform: uppercase;
+            letter-spacing: 1.5px; margin-bottom: 12px; padding-bottom: 8px;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .day-list { display: grid; gap: 6px; }
+        .day-row {
+            display: grid; grid-template-columns: 100px 60px 80px 1fr;
+            align-items: center; gap: 12px; padding: 8px 12px;
+            background: rgba(17,17,24,0.5); border: 1px solid #1e1e2e; border-radius: 6px;
+            text-decoration: none; transition: border-color 0.2s;
+        }
+        .day-row:hover { border-color: #00d4ff; }
+        .day-date { color: #fff; font-size: 12px; font-weight: 500; }
+        .day-regime { font-size: 10px; font-weight: 700; }
+        .day-regime.bull { color: #34d399; }
+        .day-regime.bear { color: #f87171; }
+        .day-regime.chop { color: #fbbf24; }
+        .day-return { font-size: 12px; font-weight: 500; }
+        .day-return.pos { color: #34d399; }
+        .day-return.neg { color: #f87171; }
+        .day-hook { font-size: 10px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        footer {
+            text-align: center; padding: 32px 0; border-top: 1px solid #1e1e2e; margin-top: 32px;
+        }
+        footer p { font-size: 11px; color: #555; }
+        footer a { color: #00d4ff; text-decoration: none; }
+
+        @media (max-width: 640px) {
+            .day-row { grid-template-columns: 90px 50px 70px; }
+            .day-hook { display: none; }
+            h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="https://qibble.io" class="nav-logo">Qibble</a>
+            <div class="nav-links">
+                <a href="https://qibble.io">Dashboard</a>
+                <a href="/btc-flow/">All Days</a>
+            </div>
+        </nav>
+
+        <h1>BTC Flow Analysis</h1>
+        <p class="subtitle">{{ total_days }} days of minute-level Bitcoin order flow data from Binance (March 2021 &ndash; present)</p>
+
+        <div class="regime-summary">
+            <span class="regime-pill bull">BULL: {{ regime_counts.BULL }} days</span>
+            <span class="regime-pill bear">BEAR: {{ regime_counts.BEAR }} days</span>
+            <span class="regime-pill chop">CHOP: {{ regime_counts.CHOP }} days</span>
+        </div>
+
+        <div class="tag-cloud">
+            <h2>Browse by Pattern</h2>
+            <div class="tag-list">
+                {% for tag, count in tag_counts %}
+                <a href="/btc-flow/tag/{{ tag }}/" class="tag-link">
+                    {{ tag }}<span class="tag-count">({{ count }})</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% for ym, entries in months.items() %}
+        <div class="month-group">
+            <div class="month-header">{{ entries[0].date[:4] }} &mdash; {{ entries[0].date[5:7] }}</div>
+            <div class="day-list">
+                {% for e in entries %}
+                <a href="/btc-flow/{{ e.date }}/" class="day-row">
+                    <span class="day-date">{{ e.date }}</span>
+                    <span class="day-regime {{ e.regime|lower }}">{{ e.regime }}</span>
+                    <span class="day-return {% if e.return_pct > 0 %}pos{% elif e.return_pct < 0 %}neg{% endif %}">{{ "%.2f"|format(e.return_pct) }}%</span>
+                    <span class="day-hook">{{ e.hook }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <footer>
+            <p>
+                <a href="https://qibble.io">Qibble</a> &middot;
+                Free BTC flow analytics &middot;
+                <a href="https://x.com/qibbler">@qibbler</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,67 @@
+name: Daily Blog Page
+
+on:
+  schedule:
+    # Run daily at 01:30 UTC — after the data update Action (01:00 UTC)
+    - cron: "30 1 * * *"
+  workflow_dispatch: # Manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  generate-daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pandas numpy matplotlib pytz jinja2 pyarrow requests
+
+      - name: Download existing blog archive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view v1.0-blog &>/dev/null; then
+            echo "Downloading existing blog archive..."
+            gh release download v1.0-blog -p blog-static.tar.gz
+            mkdir -p blog-static
+            tar xzf blog-static.tar.gz -C blog-static
+            echo "Existing pages: $(find blog-static -name 'index.html' | wc -l)"
+          else
+            echo "No existing blog release — run generate-blog workflow first"
+            exit 1
+          fi
+
+      - name: Download parquet
+        run: |
+          mkdir -p data
+          curl -L -o data/btc_1m.parquet \
+            https://github.com/${{ github.repository }}/releases/download/v1.0-data/btc_1m.parquet
+
+      - name: Generate yesterday's page
+        run: |
+          YESTERDAY=$(date -u -d "yesterday" +%Y-%m-%d 2>/dev/null || date -u -v-1d +%Y-%m-%d)
+          echo "Generating page for $YESTERDAY"
+          python blog/generate_daily.py --parquet data/btc_1m.parquet "$YESTERDAY"
+          echo "Total pages now: $(find blog-static -name 'index.html' | wc -l)"
+
+      - name: Repackage and upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd blog-static
+          tar czf ../blog-static.tar.gz .
+          cd ..
+          echo "Archive size: $(du -sh blog-static.tar.gz | cut -f1)"
+          gh release upload v1.0-blog blog-static.tar.gz --clobber
