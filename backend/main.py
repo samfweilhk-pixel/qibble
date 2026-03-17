@@ -49,29 +49,14 @@ DATA_PATH = os.environ.get(
 )
 print(f"Loading data from {DATA_PATH}...")
 df = pd.read_parquet(DATA_PATH)
-
-# ── Memory optimization ──
-# Float64 → Float32: saves ~150MB (price precision loss negligible for display)
+# Float64 → Float32: saves ~150MB
 for col in df.select_dtypes(include=["float64"]).columns:
     df[col] = df[col].astype(np.float32)
-# Int64 → Int32: saves ~10MB
-for col in df.select_dtypes(include=["int64"]).columns:
-    df[col] = df[col].astype(np.int32)
-# String → Categorical: saves ~450MB (1,840 dates × 2.64M rows → 1,840 codes)
+# String → Categorical: saves ~450MB
 df["time"] = df["open_time"].dt.strftime("%H:%M").astype("category")
-df["date_str"] = df["date_utc"].astype("category")
+df["date_str"] = df["date_utc"]  # keep as object (used in .map and groupby)
 df["date_utc"] = df["date_utc"].astype("category")
-# Drop close_time if present — not used by any analytics
-if "close_time" in df.columns:
-    df.drop(columns=["close_time"], inplace=True)
-if "taker_buy_quote_vol" in df.columns:
-    df.drop(columns=["taker_buy_quote_vol"], inplace=True)
-
-# Pre-compute hour column once (used by multiple analytics) — int8 = 1 byte vs 8
-df["hour"] = df["open_time"].dt.hour.astype(np.int8)
-
-mem_mb = df.memory_usage(deep=True).sum() / 1e6
-print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days ({mem_mb:.0f} MB)")
+print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
 
 
 # ── Regime Detection ────────────────────────────────────────────────────
@@ -149,7 +134,7 @@ def _detect_regimes() -> dict:
 
 print("Computing regimes...")
 REGIMES = _detect_regimes()
-df["regime"] = df["date_str"].map(REGIMES["map"]).fillna("CHOP").astype("category")
+df["regime"] = df["date_str"].map(REGIMES["map"]).fillna("CHOP")
 print(f"  Regimes: {df['regime'].value_counts().to_dict()}")
 
 
