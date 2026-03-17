@@ -49,18 +49,13 @@ DATA_PATH = os.environ.get(
 )
 ROLLING_WINDOW_DAYS = 365 * 5  # 5-year rolling window
 
-print(f"Loading data from {DATA_PATH}...")
-df = pd.read_parquet(DATA_PATH)
+# Filter at read time via pyarrow — full dataset never enters pandas memory
+_cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=ROLLING_WINDOW_DAYS)
+print(f"Loading data from {DATA_PATH} (5-year window from {_cutoff.date()})...")
+df = pd.read_parquet(DATA_PATH, filters=[("open_time", ">=", _cutoff)])
 df["time"] = df["open_time"].dt.strftime("%H:%M")
 df["date_str"] = df["date_utc"]  # already string
 print(f"  Loaded {len(df):,} bars, {df['date_str'].nunique()} days")
-
-# Trim to 5-year rolling window to prevent OOM as data grows
-cutoff = df["open_time"].max() - pd.Timedelta(days=ROLLING_WINDOW_DAYS)
-before = len(df)
-df = df[df["open_time"] >= cutoff].reset_index(drop=True)
-if len(df) < before:
-    print(f"  Trimmed to {ROLLING_WINDOW_DAYS}-day window: {before:,} → {len(df):,} bars, {df['date_str'].nunique()} days")
 
 
 # ── Regime Detection ────────────────────────────────────────────────────
