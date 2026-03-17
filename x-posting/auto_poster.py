@@ -224,6 +224,9 @@ worst_sess = min(sessions, key=sessions.get)
 date_display = pd.to_datetime(chosen_date).strftime("%b %d, %Y")
 
 # ── Tweet templates ──
+# Each tweet links to the specific day's blog page
+day_url = f"qibble.io/btc-flow/{chosen_date}/"
+
 templates = [
     # Standard recap
     (
@@ -231,7 +234,7 @@ templates = [
         f"${close_px:,.0f} ({day_return:+.2f}%) — {price_desc}\n"
         f"Net flow: {net_btc:+,.0f} BTC — {align_desc}\n\n"
         f"Asia {asia_ret:+.2f}% | Europe {europe_ret:+.2f}% | US {us_ret:+.2f}%\n\n"
-        f"Explore 5 years of BTC flow data free at qibble.io"
+        f"Full flow analysis: {day_url}"
     ),
     # Question hook
     (
@@ -239,7 +242,7 @@ templates = [
         f"[{regime}] ${close_px:,.0f} ({day_return:+.2f}%)\n"
         f"{net_btc:+,.0f} BTC net flow — {align_desc}\n"
         f"{best_sess} led at {sessions[best_sess]:+.2f}%\n\n"
-        f"Dig into any day at qibble.io — free"
+        f"Charts + session breakdown: {day_url}"
     ),
     # Session spotlight
     (
@@ -247,7 +250,7 @@ templates = [
         f"[{regime}] BTC {price_desc} to ${close_px:,.0f}\n"
         f"Asia {asia_ret:+.2f}% | Europe {europe_ret:+.2f}% | US {us_ret:+.2f}%\n"
         f"Net flow: {net_btc:+,.0f} BTC ({direction})\n\n"
-        f"5 years of session data at qibble.io"
+        f"Minute-level breakdown: {day_url}"
     ),
     # Flow-first
     (
@@ -255,7 +258,7 @@ templates = [
         f"[{regime}] {direction.title()} pushed ${close_px:,.0f} ({day_return:+.2f}%)\n"
         f"{align_desc.capitalize()}\n"
         f"Volume: {total_vol:,.0f} BTC\n\n"
-        f"Every day since 2021 — free at qibble.io"
+        f"Full analysis: {day_url}"
     ),
     # Regime-first
     (
@@ -263,7 +266,7 @@ templates = [
         f"${close_px:,.0f} ({day_return:+.2f}%) — {price_desc}\n"
         f"Flow: {net_btc:+,.0f} BTC | Vol: {total_vol:,.0f} BTC\n"
         f"{align_desc.capitalize()}\n\n"
-        f"See how flow behaves in every regime at qibble.io"
+        f"Whale activity + flow charts: {day_url}"
     ),
     # Throwback
     (
@@ -271,7 +274,7 @@ templates = [
         f"BTC at ${close_px:,.0f} [{regime}]\n"
         f"{price_desc.capitalize()} — {day_return:+.2f}%\n"
         f"{direction.title()} dominated with {net_btc:+,.0f} BTC net flow\n\n"
-        f"Backtest any day at qibble.io — it's free"
+        f"See the full day: {day_url}"
     ),
     # Data nerd
     (
@@ -280,7 +283,7 @@ templates = [
         f"Net flow: {net_btc:+,.0f} BTC\n"
         f"Vol: {total_vol:,.0f} BTC | Trades: {day['num_trades'].sum():,.0f}\n"
         f"Flow-price: {alignment}\n\n"
-        f"Full minute-level data at qibble.io"
+        f"Minute-level data: {day_url}"
     ),
     # Divergence/alignment highlight
     (
@@ -288,7 +291,7 @@ templates = [
         f"[{regime}] BTC {price_desc} ({day_return:+.2f}%)\n"
         f"while {direction} pushed {abs(net_btc):,.0f} BTC\n"
         f"{worst_sess} weakest at {sessions[worst_sess]:+.2f}%\n\n"
-        f"Spot divergences across 1,800+ days at qibble.io"
+        f"Flow analysis + charts: {day_url}"
     ),
 ]
 
