@@ -722,7 +722,6 @@ print("All pre-computations complete!")
 # Background sync REMOVED (Mar 19 2026).
 # It recomputed all 12 analytics in memory = doubled RAM = OOM every 6 hours.
 # Data freshness now handled by daily-deploy.yml (Render rebuild at 01:00 UTC).
-log.info(f"Background sync started (every {SYNC_INTERVAL_S // 3600}h)")
 
 
 # ── API Endpoints ───────────────────────────────────────────────────────
