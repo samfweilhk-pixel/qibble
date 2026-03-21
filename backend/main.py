@@ -227,14 +227,15 @@ def _build_lead_lag() -> dict:
                 if len(f) < 20:
                     continue
                 c = np.corrcoef(f, r)
-                if not np.isnan(c[0, 1]):
+                if np.isfinite(c[0, 1]):
                     all_corrs[lag].append(c[0, 1])
 
         bars = []
         for lag in lags:
             vals = all_corrs[lag]
             if vals:
-                bars.append({"lag": lag, "corr": float(np.mean(vals)), "n_days": len(vals)})
+                mean_val = float(np.mean(vals))
+                bars.append({"lag": lag, "corr": mean_val if np.isfinite(mean_val) else 0.0, "n_days": len(vals)})
             else:
                 bars.append({"lag": lag, "corr": 0.0, "n_days": 0})
 
@@ -356,11 +357,12 @@ def _build_corr_divergence() -> dict:
         corr_mean = all_corr["roll_corr"].rolling(7200, min_periods=1000).mean().shift(1)
         corr_std = all_corr["roll_corr"].rolling(7200, min_periods=1000).std().shift(1)
 
-        all_corr["corr_z"] = np.where(
+        raw_z = np.where(
             corr_std > 0,
             (all_corr["roll_corr"] - corr_mean) / corr_std,
             0.0,
         )
+        all_corr["corr_z"] = np.where(np.isfinite(raw_z), raw_z, 0.0)
 
         thresholds = {}
         for thresh in [-1.0, -1.5, -2.0]:
@@ -385,7 +387,8 @@ def _build_corr_divergence() -> dict:
                         fwd_idx = idx + h
                         if fwd_idx < len(all_corr):
                             fwd_ret = (all_corr["close"].iloc[fwd_idx] / all_corr["close"].iloc[idx] - 1) * 10000
-                            vals.append(fwd_ret)
+                            if np.isfinite(fwd_ret):
+                                vals.append(fwd_ret)
                     if vals:
                         curve.append({"bar": h, "avg_bps": float(np.mean(vals)), "n": len(vals)})
                     else:
@@ -573,13 +576,14 @@ def _build_flow_persistence() -> dict:
                 if lag >= len(imb):
                     break
                 c = np.corrcoef(imb[:-lag], imb[lag:])
-                if not np.isnan(c[0, 1]):
+                if np.isfinite(c[0, 1]):
                     acf_by_lag[lag].append(c[0, 1])
 
         bars = []
         for lag in range(1, 31):
             vals = acf_by_lag[lag]
-            bars.append({"lag": lag, "acf": float(np.mean(vals)) if vals else 0.0, "n_days": len(vals)})
+            mean_val = float(np.mean(vals)) if vals else 0.0
+            bars.append({"lag": lag, "acf": mean_val if np.isfinite(mean_val) else 0.0, "n_days": len(vals)})
 
         results[regime] = bars
 
