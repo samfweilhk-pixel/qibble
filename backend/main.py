@@ -290,7 +290,7 @@ def _build_flow_extremes() -> dict:
                     "nf": nf_val,
                     "z": z_val,
                     "t": str(d["time"].iloc[i]),
-                    "fwd": {k: v for k, v in fwd.items() if np.isfinite(v)},
+                    "fwd": {k: float(v) for k, v in fwd.items() if np.isfinite(v)},
                 }
                 if z > 0:
                     buy_events.append(event)
