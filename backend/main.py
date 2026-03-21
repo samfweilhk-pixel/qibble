@@ -280,11 +280,16 @@ def _build_flow_extremes() -> dict:
                 if not fwd:
                     continue
 
+                nf_val = float(d["net_flow"].iloc[i])
+                z_val = float(z)
+                if not (np.isfinite(nf_val) and np.isfinite(z_val)):
+                    continue
+
                 event = {
-                    "nf": float(d["net_flow"].iloc[i]),
-                    "z": float(z),
-                    "t": d["time"].iloc[i],
-                    "fwd": fwd,
+                    "nf": nf_val,
+                    "z": z_val,
+                    "t": str(d["time"].iloc[i]),
+                    "fwd": {k: v for k, v in fwd.items() if np.isfinite(v)},
                 }
                 if z > 0:
                     buy_events.append(event)

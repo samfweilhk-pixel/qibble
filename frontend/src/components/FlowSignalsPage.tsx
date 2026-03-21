@@ -24,6 +24,10 @@ export default function FlowSignalsPage() {
         setPersistence(per)
         setLoading(false)
       })
+      .catch((err) => {
+        console.error('Flow signals fetch failed:', err)
+        setLoading(false)
+      })
   }, [])
 
   if (loading) return <div className="flex items-center justify-center py-20"><div className="text-accent-cyan text-sm animate-pulse">Loading flow signals...</div></div>
