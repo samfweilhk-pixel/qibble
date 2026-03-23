@@ -5,10 +5,11 @@ FastAPI serving pre-computed analytics from btc_1m.parquet.
 All heavy computation runs on startup; endpoints serve cached results.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 import pandas as pd
 import numpy as np
 import os
@@ -21,6 +22,37 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class SEORedirectMiddleware(BaseHTTPMiddleware):
+    """Redirect www → non-www and normalize trailing slashes for blog pages."""
+
+    async def dispatch(self, request: Request, call_next):
+        host = request.headers.get("host", "")
+        path = request.url.path
+        query = request.url.query
+
+        needs_www_strip = host.startswith("www.")
+        needs_slash = (
+            (path == "/btc-flow" or
+             (path.startswith("/btc-flow/") and not path.endswith("/")
+              and "." not in path.split("/")[-1]))
+        )
+
+        # Combined redirect: fix www + trailing slash in one 301
+        if needs_www_strip or needs_slash:
+            scheme = request.url.scheme
+            new_host = host[4:] if needs_www_strip else host
+            new_path = (path + "/") if needs_slash else path
+            target = f"{scheme}://{new_host}{new_path}"
+            if query:
+                target += f"?{query}"
+            return RedirectResponse(url=target, status_code=301)
+
+        return await call_next(request)
+
+
+app.add_middleware(SEORedirectMiddleware)
 
 
 @app.get("/health")
@@ -939,7 +971,7 @@ def serve_robots():
     robots = os.path.join(BLOG_DIR, "robots.txt")
     if os.path.isfile(robots):
         return FileResponse(robots, media_type="text/plain")
-    return FileResponse(robots, media_type="text/plain")
+    return {"error": "not found"}
 
 
 # ── Static Files (Frontend) ────────────────────────────────────────────
