@@ -25,26 +25,23 @@ app.add_middleware(
 
 
 class SEORedirectMiddleware(BaseHTTPMiddleware):
-    """Redirect www → non-www and normalize trailing slashes for blog pages."""
+    """Normalize trailing slashes for blog pages. www handled by Render edge."""
 
     async def dispatch(self, request: Request, call_next):
-        host = request.headers.get("host", "")
         path = request.url.path
         query = request.url.query
 
-        needs_www_strip = host.startswith("www.")
         needs_slash = (
             (path == "/btc-flow" or
              (path.startswith("/btc-flow/") and not path.endswith("/")
               and "." not in path.split("/")[-1]))
         )
 
-        # Combined redirect: fix www + trailing slash in one 301
-        if needs_www_strip or needs_slash:
+        if needs_slash:
             scheme = request.url.scheme
-            new_host = host[4:] if needs_www_strip else host
-            new_path = (path + "/") if needs_slash else path
-            target = f"{scheme}://{new_host}{new_path}"
+            host = request.headers.get("host", "")
+            new_path = path + "/"
+            target = f"{scheme}://{host}{new_path}"
             if query:
                 target += f"?{query}"
             return RedirectResponse(url=target, status_code=301)
