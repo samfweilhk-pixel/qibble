@@ -1577,6 +1577,17 @@ def main():
         target_dates = list(set(samples))[:5]
         print(f"Selected: {target_dates}")
 
+    # ── Load existing manifest so we never lose pages ──
+    existing_manifest_path = OUTPUT_DIR / "manifest.json"
+    existing_manifest = {}
+    if existing_manifest_path.exists():
+        try:
+            existing_entries = json.loads(existing_manifest_path.read_text())
+            existing_manifest = {e["date"]: e for e in existing_entries}
+            print(f"  Loaded existing manifest: {len(existing_manifest)} pages")
+        except (json.JSONDecodeError, KeyError):
+            print("  Warning: could not parse existing manifest, starting fresh")
+
     # ── Pass 1: Generate all pages, collect manifest ──
     print(f"\n=== Pass 1: Generate pages ({len(target_dates)} days) ===")
     manifest = []
@@ -1613,6 +1624,14 @@ def main():
             html = html.replace('<!-- CTA -->', related_html + '\n        <!-- CTA -->')
             html_path.write_text(html)
             print(f"  {date_str}: {len(related)} related days linked")
+
+    # ── Merge with existing manifest (new pages override same-date entries) ──
+    new_dates = {m["date"] for m in manifest}
+    for date_key, entry in existing_manifest.items():
+        if date_key not in new_dates:
+            manifest.append(entry)
+    manifest.sort(key=lambda x: x["date"], reverse=True)
+    print(f"  Merged manifest: {len(manifest)} total pages ({len(new_dates)} new/updated, {len(manifest) - len(new_dates)} existing)")
 
     # ── Generate index, tag pages, sitemap ──
     print(f"\n=== Generating index & discovery pages ===")
