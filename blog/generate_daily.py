@@ -1386,11 +1386,11 @@ def generate_sitemap(manifest):
     """Generate sitemap.xml."""
     lines = ['<?xml version="1.0" encoding="UTF-8"?>',
              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-             '  <url><loc>https://qibble.io/</loc><priority>1.0</priority></url>',
-             '  <url><loc>https://qibble.io/btc-flow/</loc><priority>0.9</priority></url>']
+             '  <url><loc>https://www.qibble.io/</loc><priority>1.0</priority></url>',
+             '  <url><loc>https://www.qibble.io/btc-flow/</loc><priority>0.9</priority></url>']
 
     for entry in sorted(manifest, key=lambda x: x["date"], reverse=True):
-        lines.append(f'  <url><loc>https://qibble.io/btc-flow/{entry["date"]}/</loc>'
+        lines.append(f'  <url><loc>https://www.qibble.io/btc-flow/{entry["date"]}/</loc>'
                      f'<lastmod>{entry["date"]}</lastmod><priority>0.6</priority></url>')
 
     # Tag pages
@@ -1398,7 +1398,7 @@ def generate_sitemap(manifest):
     for entry in manifest:
         tags.update(entry["tags"])
     for tag in sorted(tags):
-        lines.append(f'  <url><loc>https://qibble.io/btc-flow/tag/{tag}/</loc>'
+        lines.append(f'  <url><loc>https://www.qibble.io/btc-flow/tag/{tag}/</loc>'
                      f'<priority>0.7</priority></url>')
 
     lines.append('</urlset>')
@@ -1413,7 +1413,7 @@ def generate_robots_txt():
     content = """User-agent: *
 Allow: /
 
-Sitemap: https://qibble.io/sitemap.xml
+Sitemap: https://www.qibble.io/sitemap.xml
 """
     path = SCRIPT_DIR.parent / "blog-static" / "robots.txt"
     path.write_text(content)
