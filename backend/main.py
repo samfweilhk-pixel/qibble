@@ -64,7 +64,8 @@ DATA_PATH = os.environ.get(
     os.path.join(os.path.dirname(__file__), "..", "data", "btc_1m.parquet"),
 )
 print(f"Loading data from {DATA_PATH}...")
-df = pd.read_parquet(DATA_PATH)
+cutoff = pd.Timestamp.utcnow() - pd.Timedelta(days=5 * 365)
+df = pd.read_parquet(DATA_PATH, filters=[("open_time", ">=", cutoff)])
 # Float64 → Float32: saves ~150MB
 for col in df.select_dtypes(include=["float64"]).columns:
     df[col] = df[col].astype(np.float32)

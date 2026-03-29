@@ -17,15 +17,15 @@ COPY backend/ ./backend/
 COPY ingest_btc.py ./
 COPY --from=frontend-build /app/frontend/dist ./static/
 
+# Copy timestamp file to bust Docker cache for data ingest + blog download
+COPY .last-deploy ./
+
 # Download seed parquet from GitHub Release (free, no LFS)
 # then run incremental ingest to catch up to today
 RUN mkdir -p data && \
     curl -L -o data/btc_1m.parquet \
     https://github.com/samfweilhk-pixel/qibble/releases/download/v1.0-data/btc_1m.parquet && \
     python ingest_btc.py
-
-# Copy timestamp file to bust Docker cache for blog download
-COPY .last-deploy ./
 
 # Download pre-generated blog pages from GitHub Release
 # These are static HTML + PNG files, served from disk (zero RAM overhead)
